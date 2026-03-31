@@ -1,0 +1,1293 @@
+{
+  "run_id": "RUN-20260327-001",
+  "generated_at": "2026-03-27T06:43:07.626Z",
+  "requirement_name": "Looply User System MVP",
+  "requirement_version": "V1.4",
+  "metrics": {
+    "feature_count": 24,
+    "user_story_count": 7,
+    "page_count": 21,
+    "design_component_count": 7,
+    "design_token_count": 20,
+    "coverage": 93,
+    "conflict_count": 7,
+    "conflicts_by_severity": {
+      "critical": 0,
+      "warning": 4,
+      "info": 3
+    }
+  },
+  "features": [
+    {
+      "id": "F-AUTH-001",
+      "title": "Email Registration",
+      "description": "Users create a Looply account via email + password, followed by a 6-digit email verification code. Includes form validation (email format, password strength, confirm password match) and agreement checkbox.",
+      "priority": "P0",
+      "complexity": "L",
+      "linkedPages": [
+        "Screen/Register",
+        "H5/Register",
+        "Screen/VerifyCode",
+        "H5/VerifyCode"
+      ],
+      "acceptanceCriteria": [
+        "User enters email, password, confirm password, checks ToS agreement, clicks Create Account",
+        "System sends 6-digit verification code to email",
+        "Redirects to VerifyCode page; after successful verification, account is created and user is auto-logged-in",
+        "Duplicate email shows 'This email is already registered'",
+        "Password must be >= 8 chars, include uppercase, lowercase, and digit",
+        "Agreement checkbox unchecked -> button disabled"
+      ],
+      "title_zh": "邮箱注册"
+    },
+    {
+      "id": "F-AUTH-002",
+      "title": "Google Quick Registration",
+      "description": "Users create a Looply account via Google OAuth 2.0 (authorization code flow). If Google email already linked, logs in directly; if email occupied by email registration, prompts to sign in or link.",
+      "priority": "P0",
+      "complexity": "L",
+      "linkedPages": [
+        "Screen/Register",
+        "H5/Register"
+      ],
+      "acceptanceCriteria": [
+        "Click 'Continue with Google' -> redirect to Google OAuth page",
+        "On authorize, new account auto-created and logged in",
+        "If Google account already linked, direct login",
+        "If Google email taken by email registration, show prompt with guidance",
+        "Cancel at Google -> return to register page silently"
+      ],
+      "title_zh": "Google 快捷注册"
+    },
+    {
+      "id": "F-AUTH-003",
+      "title": "Unified Registration Entry",
+      "description": "Register page integrates email registration form and Google quick registration button in a single view, with 'or' divider and 'Already have an account? Sign in' link.",
+      "priority": "P0",
+      "complexity": "S",
+      "linkedPages": [
+        "Screen/Register",
+        "H5/Register"
+      ],
+      "acceptanceCriteria": [
+        "Email form displayed by default with 'or' divider and Google button below",
+        "Bottom link navigates to login page"
+      ],
+      "title_zh": "统一注册入口"
+    },
+    {
+      "id": "F-AUTH-004",
+      "title": "Password Setup",
+      "description": "Password input with show/hide toggle, strength indicator (weak/medium/strong), and confirm password field with real-time mismatch feedback.",
+      "priority": "P0",
+      "complexity": "M",
+      "linkedPages": [
+        "Screen/Register",
+        "H5/Register",
+        "Screen/ResetPassword",
+        "H5/ResetPassword"
+      ],
+      "acceptanceCriteria": [
+        "Password field has show/hide toggle",
+        "Real-time validation: min 8 chars, uppercase, lowercase, digit",
+        "Password strength indicator shown (weak/medium/strong) - NOTE: not reflected in design",
+        "Confirm password mismatch shown in real-time"
+      ],
+      "title_zh": "密码设置"
+    },
+    {
+      "id": "F-AUTH-005",
+      "title": "Agreement Acceptance",
+      "description": "Registration form includes mandatory opt-in checkbox for Terms of Service and Privacy Policy. Must be actively checked (not pre-checked). System records agreement timestamp and version.",
+      "priority": "P0",
+      "complexity": "S",
+      "linkedPages": [
+        "Screen/Register",
+        "H5/Register"
+      ],
+      "acceptanceCriteria": [
+        "Checkbox text: 'I agree to the Terms of Service and Privacy Policy'",
+        "ToS and Privacy Policy are clickable links opening new pages",
+        "Checkbox must not be pre-checked",
+        "Create Account button disabled until checked",
+        "Backend records consent timestamp and agreement version"
+      ],
+      "title_zh": "协议承接"
+    },
+    {
+      "id": "F-AUTH-006",
+      "title": "Terms of Service Page",
+      "description": "Static page displaying Looply Terms of Service content, accessible from register page link and footer. Includes title, body text, last updated date, and back navigation.",
+      "priority": "P1",
+      "complexity": "S",
+      "linkedPages": [
+        "Screen/TermsOfService",
+        "H5/TermsOfService"
+      ],
+      "acceptanceCriteria": [
+        "Page displays title 'Terms of Service', last updated date, and full text",
+        "Accessible without login",
+        "Back navigation preserves register form state",
+        "PC and H5 share same content, layout adapts"
+      ],
+      "title_zh": "服务条款页面"
+    },
+    {
+      "id": "F-AUTH-007",
+      "title": "Privacy Policy Page",
+      "description": "Static page displaying Looply Privacy Policy content. Same structure and behavior as ToS page. Content must comply with GDPR/CCPA.",
+      "priority": "P1",
+      "complexity": "S",
+      "linkedPages": [
+        "Screen/PrivacyPolicy",
+        "H5/PrivacyPolicy"
+      ],
+      "acceptanceCriteria": [
+        "Page displays title 'Privacy Policy', last updated date, and full text",
+        "Accessible without login",
+        "Content compliant with GDPR and CCPA requirements"
+      ],
+      "title_zh": "隐私政策页面"
+    },
+    {
+      "id": "F-AUTH-008",
+      "title": "Value Proposition Display",
+      "description": "PC register/login pages show brand panel on the left (~40% width) with logo, headline 'Start your global e-commerce journey', subtitle, feature list, and gradient background. H5 does not show this panel.",
+      "priority": "P1",
+      "complexity": "S",
+      "linkedPages": [
+        "Screen/Register",
+        "Screen/Login"
+      ],
+      "acceptanceCriteria": [
+        "PC left panel: brand logo, headline, subtitle, feature list on gradient background",
+        "Panel occupies ~660px (40% of 1440px)",
+        "H5 does not render brand panel"
+      ],
+      "title_zh": "品牌价值展示"
+    },
+    {
+      "id": "F-AUTH-009",
+      "title": "Email Verification Code",
+      "description": "Shared verification code page for registration and forgot-password flows. 6-digit code input with auto-focus, auto-advance, paste support. Includes resend mechanism with 60s cooldown and hourly limit.",
+      "priority": "P0",
+      "complexity": "L",
+      "linkedPages": [
+        "Screen/VerifyCode",
+        "H5/VerifyCode"
+      ],
+      "acceptanceCriteria": [
+        "6 individual digit input boxes with auto-focus and auto-advance",
+        "Supports paste of full 6-digit code",
+        "Backspace returns to previous box",
+        "Verify code button enabled after 6 digits entered",
+        "Wrong code: 'Invalid verification code', clears inputs",
+        "Expired code: 'Code has expired. Please request a new one.'",
+        "5 consecutive failures invalidates code",
+        "Resend link with 60s countdown timer",
+        "Max 5 sends per email per hour",
+        "Code valid for 10 minutes, single-use"
+      ],
+      "title_zh": "邮箱验证码校验"
+    },
+    {
+      "id": "F-AUTH-010",
+      "title": "Email Password Login",
+      "description": "Users log in with registered email and password. Validates email format on blur, checks credentials on submit. Wrong password shows error with Forgot password link.",
+      "priority": "P0",
+      "complexity": "M",
+      "linkedPages": [
+        "Screen/Login",
+        "H5/Login"
+      ],
+      "acceptanceCriteria": [
+        "Email validated on blur (format check)",
+        "Password non-empty checked on submit",
+        "Successful login redirects to homepage or previous page",
+        "Unregistered email: 'Account not found'",
+        "Wrong password: 'Incorrect password' with Forgot password link",
+        "Locked account: shows lock message with 30-min wait"
+      ],
+      "title_zh": "邮箱密码登录"
+    },
+    {
+      "id": "F-AUTH-011",
+      "title": "Google Quick Login",
+      "description": "OAuth 2.0 login for users with linked Google accounts. If no linked account, auto-creates one (same as Google registration). Uses authorization code flow.",
+      "priority": "P0",
+      "complexity": "L",
+      "linkedPages": [
+        "Screen/Login",
+        "H5/Login"
+      ],
+      "acceptanceCriteria": [
+        "Click 'Continue with Google' -> Google OAuth flow",
+        "Linked account -> direct login",
+        "No linked account -> auto-create and login",
+        "Cancel at Google -> return to login page",
+        "Google unavailable -> prompt to use email login"
+      ],
+      "title_zh": "Google 快捷登录"
+    },
+    {
+      "id": "F-AUTH-012",
+      "title": "Forgot Password",
+      "description": "User enters registered email, system sends 6-digit verification code. For security, shows generic success message even if email is not registered.",
+      "priority": "P0",
+      "complexity": "M",
+      "linkedPages": [
+        "Screen/ForgotPassword",
+        "H5/ForgotPassword",
+        "Screen/VerifyCode",
+        "H5/VerifyCode"
+      ],
+      "acceptanceCriteria": [
+        "User enters email and clicks send button",
+        "System sends 6-digit code (not reset link)",
+        "Generic message: 'If this email is registered, you will receive a verification code'",
+        "60s resend cooldown",
+        "After code verification, redirects to ResetPassword page"
+      ],
+      "title_zh": "忘记密码"
+    },
+    {
+      "id": "F-AUTH-013",
+      "title": "Reset Password",
+      "description": "After successful verification code check, user sets new password (enter twice). Must differ from old password. Session expires after 15 minutes.",
+      "priority": "P0",
+      "complexity": "M",
+      "linkedPages": [
+        "Screen/ResetPassword",
+        "H5/ResetPassword"
+      ],
+      "acceptanceCriteria": [
+        "New password + confirm password fields",
+        "Same password rules as registration",
+        "New password must differ from old: 'New password must be different from your current password'",
+        "Success: 'Password updated successfully', redirect to login",
+        "15-min session timeout: 'Session expired. Please start over.'"
+      ],
+      "title_zh": "重置密码"
+    },
+    {
+      "id": "F-AUTH-014",
+      "title": "Login State Persistence (Remember Me)",
+      "description": "Login form has 'Remember me' checkbox. Checked: Cookie 30-day expiry with rolling renewal. Unchecked: session-level Cookie. Cookie attributes: HttpOnly, Secure, SameSite=Lax.",
+      "priority": "P0",
+      "complexity": "M",
+      "linkedPages": [
+        "Screen/Login",
+        "H5/Login",
+        "Screen/Login-Remembered"
+      ],
+      "acceptanceCriteria": [
+        "Remember me checkbox on login form",
+        "Checked: Cookie Max-Age=30 days, rolls on each visit",
+        "Unchecked: session cookie, cleared on browser close",
+        "Cookie: HttpOnly=true, Secure=true, SameSite=Lax, Domain=.looply.com",
+        "Password change invalidates all existing tokens"
+      ],
+      "title_zh": "登录态保持（Remember Me）"
+    },
+    {
+      "id": "F-AUTH-015",
+      "title": "Active Logout",
+      "description": "User triggers logout from avatar dropdown (PC) or profile page (H5). Confirmation modal appears. On confirm, clears session/token and redirects to homepage.",
+      "priority": "P0",
+      "complexity": "M",
+      "linkedPages": [
+        "Screen/LogoutModal",
+        "H5/LogoutModal"
+      ],
+      "acceptanceCriteria": [
+        "Confirmation dialog: 'Are you sure you want to sign out?'",
+        "Confirm: 'Yes, sign out' -> clear token, redirect to homepage",
+        "Cancel: close modal, maintain state",
+        "Logout failure: force-clear local token, redirect anyway",
+        "Button shows loading during logout request"
+      ],
+      "title_zh": "主动退出"
+    },
+    {
+      "id": "F-AUTH-016",
+      "title": "Logout Entry Points",
+      "description": "PC: user avatar dropdown -> 'Sign Out'. H5: profile page bottom -> 'Sign Out' button.",
+      "priority": "P0",
+      "complexity": "S",
+      "linkedPages": [],
+      "acceptanceCriteria": [
+        "PC: avatar dropdown menu has Sign Out option",
+        "H5: profile page bottom has Sign Out button"
+      ],
+      "title_zh": "退出入口"
+    },
+    {
+      "id": "F-AUTH-017",
+      "title": "Logout Redirect Logic",
+      "description": "After logout (active, session expiry, or forced), redirect to homepage with appropriate message.",
+      "priority": "P1",
+      "complexity": "S",
+      "linkedPages": [],
+      "acceptanceCriteria": [
+        "Active logout: redirect to homepage",
+        "Session expired: redirect to homepage with 'Session expired' message",
+        "Security forced logout: redirect to homepage with explanation"
+      ],
+      "title_zh": "退出跳转"
+    },
+    {
+      "id": "F-AUTH-018",
+      "title": "Logout Feedback",
+      "description": "Full feedback lifecycle: confirmation modal on click, loading state on confirm button, success = redirect, failure = toast error.",
+      "priority": "P1",
+      "complexity": "S",
+      "linkedPages": [
+        "Screen/LogoutModal",
+        "H5/LogoutModal"
+      ],
+      "acceptanceCriteria": [
+        "Click logout: show confirmation modal",
+        "Confirm: button shows loading spinner",
+        "Success: redirect (implicit success feedback)",
+        "Failure: toast 'Sign out failed, please try again'"
+      ],
+      "title_zh": "退出反馈"
+    },
+    {
+      "id": "F-AUTH-019",
+      "title": "Password Validation Rules",
+      "description": "Shared password validation for registration and reset: min 8 chars, uppercase, lowercase, digit. Real-time per-rule status display.",
+      "priority": "P0",
+      "complexity": "S",
+      "linkedPages": [
+        "Screen/Register",
+        "H5/Register",
+        "Screen/ResetPassword",
+        "H5/ResetPassword"
+      ],
+      "acceptanceCriteria": [
+        "Min 8 characters",
+        "At least 1 uppercase letter (A-Z)",
+        "At least 1 lowercase letter (a-z)",
+        "At least 1 digit (0-9)",
+        "Each rule shows pass/fail status in real-time"
+      ],
+      "title_zh": "密码校验规则"
+    },
+    {
+      "id": "F-AUTH-020",
+      "title": "Login Attempt Throttling",
+      "description": "5 consecutive wrong passwords locks account for 30 minutes. Lock is per-account (not IP). Auto-unlocks after timeout. Success resets counter.",
+      "priority": "P0",
+      "complexity": "M",
+      "linkedPages": [
+        "Screen/LoginError",
+        "H5/LoginError"
+      ],
+      "acceptanceCriteria": [
+        "5 consecutive failures -> account locked 30 minutes",
+        "Locked account: show banner 'Too many failed attempts. Account locked for 30 minutes.'",
+        "During lockout: login attempts rejected with lock message",
+        "Auto-unlock after 30 minutes, counter reset",
+        "Successful login resets error counter"
+      ],
+      "title_zh": "登录限错"
+    },
+    {
+      "id": "F-AUTH-021",
+      "title": "Registration Rate Limiting",
+      "description": "Limit registrations: max 5 per IP per hour, max 3 per device fingerprint per hour. Generic error message, does not reveal rules.",
+      "priority": "P0",
+      "complexity": "M",
+      "linkedPages": [],
+      "acceptanceCriteria": [
+        "Same IP: max 5 registrations/hour",
+        "Same device fingerprint: max 3 registrations/hour",
+        "Throttled: 'Too many attempts. Please try again later.'",
+        "Must not reveal specific limits"
+      ],
+      "title_zh": "注册限频"
+    },
+    {
+      "id": "F-AUTH-022",
+      "title": "Email Sending Rate Limiting",
+      "description": "Applies to both registration and forgot-password verification emails. Per-email: 60s cooldown + 5/hour max. Per-IP: 10 sends/hour max.",
+      "priority": "P0",
+      "complexity": "M",
+      "linkedPages": [],
+      "acceptanceCriteria": [
+        "Same email: 60s minimum between sends",
+        "Same email: max 5 per hour",
+        "Same IP: max 10 triggers per hour",
+        "Button shows 60s countdown after send",
+        "Hourly limit: 'Too many requests. Please try again later.'"
+      ],
+      "title_zh": "发信限频"
+    },
+    {
+      "id": "F-AUTH-023",
+      "title": "Error Message System",
+      "description": "Standardized error display across all auth flows: inline field errors (red text below input), banner errors (page top), toast notifications (network/server errors). Security-sensitive messages do not reveal internal logic.",
+      "priority": "P0",
+      "complexity": "M",
+      "linkedPages": [
+        "Screen/LoginError",
+        "H5/LoginError"
+      ],
+      "acceptanceCriteria": [
+        "Field errors: red text below input with error border",
+        "Account lock: top banner with warning icon",
+        "Network errors: toast notification",
+        "Server errors: toast notification",
+        "All error text in red with error icon where appropriate",
+        "Security messages do not expose system internals",
+        "All messages support i18n"
+      ],
+      "title_zh": "错误提示体系"
+    },
+    {
+      "id": "F-AUTH-024",
+      "title": "Session Expiration Handling",
+      "description": "When token expires (naturally, password change, admin force, or account lock), frontend receives 401, clears local token, redirects to homepage with message. After re-login, attempts to restore previous page.",
+      "priority": "P0",
+      "complexity": "M",
+      "linkedPages": [
+        "Screen/SessionExpired",
+        "H5/SessionExpired"
+      ],
+      "acceptanceCriteria": [
+        "401 response triggers session expiry flow",
+        "Clear local token storage",
+        "Redirect to homepage with 'Session expired. Please sign in again.'",
+        "Modal/overlay with sign-in-again button",
+        "After re-login, restore previous page if possible",
+        "Password change invalidates all tokens across devices"
+      ],
+      "title_zh": "会话过期处理"
+    }
+  ],
+  "userStories": [
+    {
+      "id": "US-001",
+      "role": "new visitor",
+      "action": "register an account via email or Google",
+      "benefit": "start shopping on Looply",
+      "acceptanceCriteria": [
+        "Can register via email+password with verification code",
+        "Can register via Google OAuth one-click",
+        "Both methods lead to auto-login and homepage redirect"
+      ],
+      "linkedFeature": "F-AUTH-001",
+      "role_zh": "新访客",
+      "action_zh": "register an account via email or Google",
+      "benefit_zh": "start shopping on Looply"
+    },
+    {
+      "id": "US-002",
+      "role": "returning user",
+      "action": "log in with email/password or Google",
+      "benefit": "access my account and order history",
+      "acceptanceCriteria": [
+        "Can log in with email and password",
+        "Can log in with Google account",
+        "Remember me keeps me logged in for 30 days"
+      ],
+      "linkedFeature": "F-AUTH-010",
+      "role_zh": "回访用户",
+      "action_zh": "log in with email/password or Google",
+      "benefit_zh": "access my account and order history"
+    },
+    {
+      "id": "US-003",
+      "role": "user who forgot password",
+      "action": "reset my password via email verification",
+      "benefit": "regain access to my account",
+      "acceptanceCriteria": [
+        "Can request password reset code via email",
+        "After verification, can set new password",
+        "Redirected to login after successful reset"
+      ],
+      "linkedFeature": "F-AUTH-012",
+      "role_zh": "忘记密码的用户",
+      "action_zh": "reset my password via email verification",
+      "benefit_zh": "regain access to my account"
+    },
+    {
+      "id": "US-004",
+      "role": "logged-in user",
+      "action": "sign out of my account",
+      "benefit": "secure my account on shared devices",
+      "acceptanceCriteria": [
+        "Confirmation dialog before logout",
+        "Session and tokens fully cleared",
+        "Redirected to homepage"
+      ],
+      "linkedFeature": "F-AUTH-015",
+      "role_zh": "logged-in user",
+      "action_zh": "sign out of my account",
+      "benefit_zh": "secure my account on shared devices"
+    },
+    {
+      "id": "US-005",
+      "role": "new user",
+      "action": "review Terms of Service and Privacy Policy before registering",
+      "benefit": "understand data usage and platform rules",
+      "acceptanceCriteria": [
+        "Can access ToS and Privacy Policy from register page links",
+        "Content is readable, scrollable, with last updated date",
+        "Returning to register preserves form state"
+      ],
+      "linkedFeature": "F-AUTH-006",
+      "role_zh": "new user",
+      "action_zh": "review Terms of Service and Privacy Policy before registering",
+      "benefit_zh": "understand data usage and platform rules"
+    },
+    {
+      "id": "US-006",
+      "role": "user with expired session",
+      "action": "be notified and guided to re-login",
+      "benefit": "understand why I was logged out and quickly re-authenticate",
+      "acceptanceCriteria": [
+        "Session expired overlay/modal shown with clear message",
+        "One-click sign-in-again button",
+        "Previous page restored after re-login"
+      ],
+      "linkedFeature": "F-AUTH-024",
+      "role_zh": "user with expired session",
+      "action_zh": "be notified and guided to re-login",
+      "benefit_zh": "understand why I was logged out and quickly re-authenticate"
+    },
+    {
+      "id": "US-007",
+      "role": "platform operator",
+      "action": "have rate limiting and account locking in place",
+      "benefit": "protect the platform from brute force attacks and abuse",
+      "acceptanceCriteria": [
+        "Login locked after 5 failed attempts for 30 min",
+        "Registration limited by IP and device fingerprint",
+        "Email sending throttled per-email and per-IP"
+      ],
+      "linkedFeature": "F-AUTH-020",
+      "role_zh": "platform operator",
+      "action_zh": "have rate limiting and account locking in place",
+      "benefit_zh": "protect the platform from brute force attacks and abuse"
+    }
+  ],
+  "designPages": {
+    "pc": [
+      {
+        "name": "Screen/Register",
+        "id": "Uzbpu",
+        "size": "1440x900"
+      },
+      {
+        "name": "Screen/Login",
+        "id": "ETOqe",
+        "size": "1440x900"
+      },
+      {
+        "name": "Screen/ForgotPassword",
+        "id": "nCMq1",
+        "size": "1440x900"
+      },
+      {
+        "name": "Screen/ResetPassword",
+        "id": "GZcn9",
+        "size": "1440x900"
+      },
+      {
+        "name": "Screen/VerifyCode",
+        "id": "m588c",
+        "size": "1440x900"
+      },
+      {
+        "name": "Screen/LogoutModal",
+        "id": "6Gjr0",
+        "size": "1440x900"
+      },
+      {
+        "name": "Screen/LoginError",
+        "id": "5OjjY",
+        "size": "1440x900"
+      },
+      {
+        "name": "Screen/SessionExpired",
+        "id": "iT4p3",
+        "size": "1440x900"
+      },
+      {
+        "name": "Screen/Login-Remembered",
+        "id": "lTgqT",
+        "size": "1440x900"
+      },
+      {
+        "name": "Screen/TermsOfService",
+        "id": "gXIC2",
+        "size": "1440x900"
+      },
+      {
+        "name": "Screen/PrivacyPolicy",
+        "id": "hk3Wl",
+        "size": "1440x900"
+      }
+    ],
+    "h5": [
+      {
+        "name": "H5/Register",
+        "id": "IqaPD",
+        "size": "390x844"
+      },
+      {
+        "name": "H5/Login",
+        "id": "7XC0S",
+        "size": "390x844"
+      },
+      {
+        "name": "H5/ForgotPassword",
+        "id": "Gu3LS",
+        "size": "390x844"
+      },
+      {
+        "name": "H5/VerifyCode",
+        "id": "OOfON",
+        "size": "390x844"
+      },
+      {
+        "name": "H5/ResetPassword",
+        "id": "oKDIa",
+        "size": "390x844"
+      },
+      {
+        "name": "H5/LogoutModal",
+        "id": "AH3UY",
+        "size": "390x844"
+      },
+      {
+        "name": "H5/SessionExpired",
+        "id": "jC8lm",
+        "size": "390x844"
+      },
+      {
+        "name": "H5/LoginError",
+        "id": "lcb9J",
+        "size": "390x844"
+      },
+      {
+        "name": "H5/TermsOfService",
+        "id": "1GwTh",
+        "size": "390x844"
+      },
+      {
+        "name": "H5/PrivacyPolicy",
+        "id": "js0Qi",
+        "size": "390x844"
+      }
+    ]
+  },
+  "coverage": {
+    "total_features": 24,
+    "features_with_design": 20,
+    "total_design_pages": 21,
+    "pages_linked_to_features": 21,
+    "unmatched_pages": [],
+    "coverage_pct": 83
+  },
+  "conflicts": [
+    {
+      "type": "inconsistent_interaction",
+      "description": "Naming mismatch: PRD references 'Screen/ErrorState' and 'H5/ErrorState', but design files use 'Screen/LoginError' and 'H5/LoginError'. Recommend aligning to design naming ('LoginError') and updating PRD.",
+      "affectedItems": [
+        "Screen/LoginError",
+        "H5/LoginError",
+        "F-AUTH-020"
+      ],
+      "severity": "warning",
+      "type_zh": "inconsistent_interaction"
+    },
+    {
+      "type": "extra_feature",
+      "description": "Design includes 'Screen/Login-Remembered' page (a returning-user variant showing avatar, name, and password-only login) which is not described as a separate page in the PRD. PRD section 3.6 mentions 'Remember me' functionality but does not define this UI variant. Recommend adding this page to PRD or confirming it's part of F-AUTH-014.",
+      "affectedItems": [
+        "Screen/Login-Remembered",
+        "F-AUTH-014"
+      ],
+      "severity": "warning",
+      "type_zh": "extra_feature"
+    },
+    {
+      "type": "inconsistent_interaction",
+      "description": "ForgotPassword button text mismatch: design shows 'Send reset link' but PRD specifies sending a verification code (section 3.4: 'Send Reset Code'). The actual mechanism is code-based, not link-based. Design button text should be updated to 'Send reset code' for consistency.",
+      "affectedItems": [
+        "Screen/ForgotPassword",
+        "H5/ForgotPassword",
+        "F-AUTH-012"
+      ],
+      "severity": "warning",
+      "type_zh": "inconsistent_interaction"
+    },
+    {
+      "type": "missing_page",
+      "description": "H5 端缺少 Login-Remembered 变体页面。PC 端有 Screen/Login-Remembered 但 H5 没有对应的 H5/Login-Remembered。如果确认 Login-Remembered 为正式需求，需补齐 H5 端设计稿。",
+      "affectedItems": [
+        "H5/Login-Remembered",
+        "F-AUTH-014"
+      ],
+      "severity": "info",
+      "type_zh": "缺失页面"
+    },
+    {
+      "type": "ambiguous",
+      "description": "PRD section 2.5 requires password strength indicator (weak/medium/strong with color differentiation), but neither PC nor H5 design files include a password strength meter component. Need to confirm whether this is deferred or should be added to designs.",
+      "affectedItems": [
+        "F-AUTH-004",
+        "Screen/Register",
+        "H5/Register"
+      ],
+      "severity": "warning",
+      "type_zh": "模糊需求"
+    },
+    {
+      "type": "ambiguous",
+      "description": "PRD mentions Homepage as unified entry for Sign In / Sign Up and as logout redirect target, but no Homepage design exists yet (PRD notes '首页尚未设计'). This is acknowledged as a known gap for future iteration.",
+      "affectedItems": [
+        "F-AUTH-017"
+      ],
+      "severity": "info",
+      "type_zh": "模糊需求"
+    },
+    {
+      "type": "ambiguous",
+      "description": "Design includes country-selector component (flag + country name + chevron) on Register and Login pages (both PC and H5), but PRD does not mention country/locale selection functionality. Need to clarify whether this is a future i18n feature or purely decorative.",
+      "affectedItems": [
+        "Screen/Register",
+        "Screen/Login",
+        "H5/Register",
+        "H5/Login"
+      ],
+      "severity": "info",
+      "type_zh": "模糊需求"
+    }
+  ],
+  "tokens": {
+    "colors": 20,
+    "typography": {
+      "fontFamily": "DM Sans",
+      "sizes": [
+        12,
+        13,
+        15,
+        18,
+        24,
+        28,
+        36
+      ]
+    }
+  },
+  "modules_zh": [
+    {
+      "name": "REG",
+      "display": "注册模块",
+      "features": [
+        {
+          "id": "F-AUTH-001",
+          "title": "Email Registration",
+          "description": "Users create a Looply account via email + password, followed by a 6-digit email verification code. Includes form validation (email format, password strength, confirm password match) and agreement checkbox.",
+          "priority": "P0",
+          "complexity": "L",
+          "linkedPages": [
+            "Screen/Register",
+            "H5/Register",
+            "Screen/VerifyCode",
+            "H5/VerifyCode"
+          ],
+          "acceptanceCriteria": [
+            "User enters email, password, confirm password, checks ToS agreement, clicks Create Account",
+            "System sends 6-digit verification code to email",
+            "Redirects to VerifyCode page; after successful verification, account is created and user is auto-logged-in",
+            "Duplicate email shows 'This email is already registered'",
+            "Password must be >= 8 chars, include uppercase, lowercase, and digit",
+            "Agreement checkbox unchecked -> button disabled"
+          ],
+          "title_zh": "邮箱注册"
+        },
+        {
+          "id": "F-AUTH-002",
+          "title": "Google Quick Registration",
+          "description": "Users create a Looply account via Google OAuth 2.0 (authorization code flow). If Google email already linked, logs in directly; if email occupied by email registration, prompts to sign in or link.",
+          "priority": "P0",
+          "complexity": "L",
+          "linkedPages": [
+            "Screen/Register",
+            "H5/Register"
+          ],
+          "acceptanceCriteria": [
+            "Click 'Continue with Google' -> redirect to Google OAuth page",
+            "On authorize, new account auto-created and logged in",
+            "If Google account already linked, direct login",
+            "If Google email taken by email registration, show prompt with guidance",
+            "Cancel at Google -> return to register page silently"
+          ],
+          "title_zh": "Google 快捷注册"
+        },
+        {
+          "id": "F-AUTH-003",
+          "title": "Unified Registration Entry",
+          "description": "Register page integrates email registration form and Google quick registration button in a single view, with 'or' divider and 'Already have an account? Sign in' link.",
+          "priority": "P0",
+          "complexity": "S",
+          "linkedPages": [
+            "Screen/Register",
+            "H5/Register"
+          ],
+          "acceptanceCriteria": [
+            "Email form displayed by default with 'or' divider and Google button below",
+            "Bottom link navigates to login page"
+          ],
+          "title_zh": "统一注册入口"
+        },
+        {
+          "id": "F-AUTH-004",
+          "title": "Password Setup",
+          "description": "Password input with show/hide toggle, strength indicator (weak/medium/strong), and confirm password field with real-time mismatch feedback.",
+          "priority": "P0",
+          "complexity": "M",
+          "linkedPages": [
+            "Screen/Register",
+            "H5/Register",
+            "Screen/ResetPassword",
+            "H5/ResetPassword"
+          ],
+          "acceptanceCriteria": [
+            "Password field has show/hide toggle",
+            "Real-time validation: min 8 chars, uppercase, lowercase, digit",
+            "Password strength indicator shown (weak/medium/strong) - NOTE: not reflected in design",
+            "Confirm password mismatch shown in real-time"
+          ],
+          "title_zh": "密码设置"
+        },
+        {
+          "id": "F-AUTH-005",
+          "title": "Agreement Acceptance",
+          "description": "Registration form includes mandatory opt-in checkbox for Terms of Service and Privacy Policy. Must be actively checked (not pre-checked). System records agreement timestamp and version.",
+          "priority": "P0",
+          "complexity": "S",
+          "linkedPages": [
+            "Screen/Register",
+            "H5/Register"
+          ],
+          "acceptanceCriteria": [
+            "Checkbox text: 'I agree to the Terms of Service and Privacy Policy'",
+            "ToS and Privacy Policy are clickable links opening new pages",
+            "Checkbox must not be pre-checked",
+            "Create Account button disabled until checked",
+            "Backend records consent timestamp and agreement version"
+          ],
+          "title_zh": "协议承接"
+        },
+        {
+          "id": "F-AUTH-006",
+          "title": "Terms of Service Page",
+          "description": "Static page displaying Looply Terms of Service content, accessible from register page link and footer. Includes title, body text, last updated date, and back navigation.",
+          "priority": "P1",
+          "complexity": "S",
+          "linkedPages": [
+            "Screen/TermsOfService",
+            "H5/TermsOfService"
+          ],
+          "acceptanceCriteria": [
+            "Page displays title 'Terms of Service', last updated date, and full text",
+            "Accessible without login",
+            "Back navigation preserves register form state",
+            "PC and H5 share same content, layout adapts"
+          ],
+          "title_zh": "服务条款页面"
+        },
+        {
+          "id": "F-AUTH-007",
+          "title": "Privacy Policy Page",
+          "description": "Static page displaying Looply Privacy Policy content. Same structure and behavior as ToS page. Content must comply with GDPR/CCPA.",
+          "priority": "P1",
+          "complexity": "S",
+          "linkedPages": [
+            "Screen/PrivacyPolicy",
+            "H5/PrivacyPolicy"
+          ],
+          "acceptanceCriteria": [
+            "Page displays title 'Privacy Policy', last updated date, and full text",
+            "Accessible without login",
+            "Content compliant with GDPR and CCPA requirements"
+          ],
+          "title_zh": "隐私政策页面"
+        },
+        {
+          "id": "F-AUTH-008",
+          "title": "Value Proposition Display",
+          "description": "PC register/login pages show brand panel on the left (~40% width) with logo, headline 'Start your global e-commerce journey', subtitle, feature list, and gradient background. H5 does not show this panel.",
+          "priority": "P1",
+          "complexity": "S",
+          "linkedPages": [
+            "Screen/Register",
+            "Screen/Login"
+          ],
+          "acceptanceCriteria": [
+            "PC left panel: brand logo, headline, subtitle, feature list on gradient background",
+            "Panel occupies ~660px (40% of 1440px)",
+            "H5 does not render brand panel"
+          ],
+          "title_zh": "品牌价值展示"
+        },
+        {
+          "id": "F-AUTH-009",
+          "title": "Email Verification Code",
+          "description": "Shared verification code page for registration and forgot-password flows. 6-digit code input with auto-focus, auto-advance, paste support. Includes resend mechanism with 60s cooldown and hourly limit.",
+          "priority": "P0",
+          "complexity": "L",
+          "linkedPages": [
+            "Screen/VerifyCode",
+            "H5/VerifyCode"
+          ],
+          "acceptanceCriteria": [
+            "6 individual digit input boxes with auto-focus and auto-advance",
+            "Supports paste of full 6-digit code",
+            "Backspace returns to previous box",
+            "Verify code button enabled after 6 digits entered",
+            "Wrong code: 'Invalid verification code', clears inputs",
+            "Expired code: 'Code has expired. Please request a new one.'",
+            "5 consecutive failures invalidates code",
+            "Resend link with 60s countdown timer",
+            "Max 5 sends per email per hour",
+            "Code valid for 10 minutes, single-use"
+          ],
+          "title_zh": "邮箱验证码校验"
+        },
+        {
+          "id": "F-AUTH-021",
+          "title": "Registration Rate Limiting",
+          "description": "Limit registrations: max 5 per IP per hour, max 3 per device fingerprint per hour. Generic error message, does not reveal rules.",
+          "priority": "P0",
+          "complexity": "M",
+          "linkedPages": [],
+          "acceptanceCriteria": [
+            "Same IP: max 5 registrations/hour",
+            "Same device fingerprint: max 3 registrations/hour",
+            "Throttled: 'Too many attempts. Please try again later.'",
+            "Must not reveal specific limits"
+          ],
+          "title_zh": "注册限频"
+        }
+      ]
+    },
+    {
+      "name": "LOGIN",
+      "display": "登录模块",
+      "features": [
+        {
+          "id": "F-AUTH-010",
+          "title": "Email Password Login",
+          "description": "Users log in with registered email and password. Validates email format on blur, checks credentials on submit. Wrong password shows error with Forgot password link.",
+          "priority": "P0",
+          "complexity": "M",
+          "linkedPages": [
+            "Screen/Login",
+            "H5/Login"
+          ],
+          "acceptanceCriteria": [
+            "Email validated on blur (format check)",
+            "Password non-empty checked on submit",
+            "Successful login redirects to homepage or previous page",
+            "Unregistered email: 'Account not found'",
+            "Wrong password: 'Incorrect password' with Forgot password link",
+            "Locked account: shows lock message with 30-min wait"
+          ],
+          "title_zh": "邮箱密码登录"
+        },
+        {
+          "id": "F-AUTH-011",
+          "title": "Google Quick Login",
+          "description": "OAuth 2.0 login for users with linked Google accounts. If no linked account, auto-creates one (same as Google registration). Uses authorization code flow.",
+          "priority": "P0",
+          "complexity": "L",
+          "linkedPages": [
+            "Screen/Login",
+            "H5/Login"
+          ],
+          "acceptanceCriteria": [
+            "Click 'Continue with Google' -> Google OAuth flow",
+            "Linked account -> direct login",
+            "No linked account -> auto-create and login",
+            "Cancel at Google -> return to login page",
+            "Google unavailable -> prompt to use email login"
+          ],
+          "title_zh": "Google 快捷登录"
+        },
+        {
+          "id": "F-AUTH-012",
+          "title": "Forgot Password",
+          "description": "User enters registered email, system sends 6-digit verification code. For security, shows generic success message even if email is not registered.",
+          "priority": "P0",
+          "complexity": "M",
+          "linkedPages": [
+            "Screen/ForgotPassword",
+            "H5/ForgotPassword",
+            "Screen/VerifyCode",
+            "H5/VerifyCode"
+          ],
+          "acceptanceCriteria": [
+            "User enters email and clicks send button",
+            "System sends 6-digit code (not reset link)",
+            "Generic message: 'If this email is registered, you will receive a verification code'",
+            "60s resend cooldown",
+            "After code verification, redirects to ResetPassword page"
+          ],
+          "title_zh": "忘记密码"
+        },
+        {
+          "id": "F-AUTH-013",
+          "title": "Reset Password",
+          "description": "After successful verification code check, user sets new password (enter twice). Must differ from old password. Session expires after 15 minutes.",
+          "priority": "P0",
+          "complexity": "M",
+          "linkedPages": [
+            "Screen/ResetPassword",
+            "H5/ResetPassword"
+          ],
+          "acceptanceCriteria": [
+            "New password + confirm password fields",
+            "Same password rules as registration",
+            "New password must differ from old: 'New password must be different from your current password'",
+            "Success: 'Password updated successfully', redirect to login",
+            "15-min session timeout: 'Session expired. Please start over.'"
+          ],
+          "title_zh": "重置密码"
+        },
+        {
+          "id": "F-AUTH-014",
+          "title": "Login State Persistence (Remember Me)",
+          "description": "Login form has 'Remember me' checkbox. Checked: Cookie 30-day expiry with rolling renewal. Unchecked: session-level Cookie. Cookie attributes: HttpOnly, Secure, SameSite=Lax.",
+          "priority": "P0",
+          "complexity": "M",
+          "linkedPages": [
+            "Screen/Login",
+            "H5/Login",
+            "Screen/Login-Remembered"
+          ],
+          "acceptanceCriteria": [
+            "Remember me checkbox on login form",
+            "Checked: Cookie Max-Age=30 days, rolls on each visit",
+            "Unchecked: session cookie, cleared on browser close",
+            "Cookie: HttpOnly=true, Secure=true, SameSite=Lax, Domain=.looply.com",
+            "Password change invalidates all existing tokens"
+          ],
+          "title_zh": "登录态保持（Remember Me）"
+        },
+        {
+          "id": "F-AUTH-020",
+          "title": "Login Attempt Throttling",
+          "description": "5 consecutive wrong passwords locks account for 30 minutes. Lock is per-account (not IP). Auto-unlocks after timeout. Success resets counter.",
+          "priority": "P0",
+          "complexity": "M",
+          "linkedPages": [
+            "Screen/LoginError",
+            "H5/LoginError"
+          ],
+          "acceptanceCriteria": [
+            "5 consecutive failures -> account locked 30 minutes",
+            "Locked account: show banner 'Too many failed attempts. Account locked for 30 minutes.'",
+            "During lockout: login attempts rejected with lock message",
+            "Auto-unlock after 30 minutes, counter reset",
+            "Successful login resets error counter"
+          ],
+          "title_zh": "登录限错"
+        },
+        {
+          "id": "F-AUTH-024",
+          "title": "Session Expiration Handling",
+          "description": "When token expires (naturally, password change, admin force, or account lock), frontend receives 401, clears local token, redirects to homepage with message. After re-login, attempts to restore previous page.",
+          "priority": "P0",
+          "complexity": "M",
+          "linkedPages": [
+            "Screen/SessionExpired",
+            "H5/SessionExpired"
+          ],
+          "acceptanceCriteria": [
+            "401 response triggers session expiry flow",
+            "Clear local token storage",
+            "Redirect to homepage with 'Session expired. Please sign in again.'",
+            "Modal/overlay with sign-in-again button",
+            "After re-login, restore previous page if possible",
+            "Password change invalidates all tokens across devices"
+          ],
+          "title_zh": "会话过期处理"
+        }
+      ]
+    },
+    {
+      "name": "LOGOUT",
+      "display": "退出模块",
+      "features": [
+        {
+          "id": "F-AUTH-015",
+          "title": "Active Logout",
+          "description": "User triggers logout from avatar dropdown (PC) or profile page (H5). Confirmation modal appears. On confirm, clears session/token and redirects to homepage.",
+          "priority": "P0",
+          "complexity": "M",
+          "linkedPages": [
+            "Screen/LogoutModal",
+            "H5/LogoutModal"
+          ],
+          "acceptanceCriteria": [
+            "Confirmation dialog: 'Are you sure you want to sign out?'",
+            "Confirm: 'Yes, sign out' -> clear token, redirect to homepage",
+            "Cancel: close modal, maintain state",
+            "Logout failure: force-clear local token, redirect anyway",
+            "Button shows loading during logout request"
+          ],
+          "title_zh": "主动退出"
+        },
+        {
+          "id": "F-AUTH-016",
+          "title": "Logout Entry Points",
+          "description": "PC: user avatar dropdown -> 'Sign Out'. H5: profile page bottom -> 'Sign Out' button.",
+          "priority": "P0",
+          "complexity": "S",
+          "linkedPages": [],
+          "acceptanceCriteria": [
+            "PC: avatar dropdown menu has Sign Out option",
+            "H5: profile page bottom has Sign Out button"
+          ],
+          "title_zh": "退出入口"
+        },
+        {
+          "id": "F-AUTH-017",
+          "title": "Logout Redirect Logic",
+          "description": "After logout (active, session expiry, or forced), redirect to homepage with appropriate message.",
+          "priority": "P1",
+          "complexity": "S",
+          "linkedPages": [],
+          "acceptanceCriteria": [
+            "Active logout: redirect to homepage",
+            "Session expired: redirect to homepage with 'Session expired' message",
+            "Security forced logout: redirect to homepage with explanation"
+          ],
+          "title_zh": "退出跳转"
+        },
+        {
+          "id": "F-AUTH-018",
+          "title": "Logout Feedback",
+          "description": "Full feedback lifecycle: confirmation modal on click, loading state on confirm button, success = redirect, failure = toast error.",
+          "priority": "P1",
+          "complexity": "S",
+          "linkedPages": [
+            "Screen/LogoutModal",
+            "H5/LogoutModal"
+          ],
+          "acceptanceCriteria": [
+            "Click logout: show confirmation modal",
+            "Confirm: button shows loading spinner",
+            "Success: redirect (implicit success feedback)",
+            "Failure: toast 'Sign out failed, please try again'"
+          ],
+          "title_zh": "退出反馈"
+        }
+      ]
+    },
+    {
+      "name": "SEC",
+      "display": "安全风控",
+      "features": [
+        {
+          "id": "F-AUTH-019",
+          "title": "Password Validation Rules",
+          "description": "Shared password validation for registration and reset: min 8 chars, uppercase, lowercase, digit. Real-time per-rule status display.",
+          "priority": "P0",
+          "complexity": "S",
+          "linkedPages": [
+            "Screen/Register",
+            "H5/Register",
+            "Screen/ResetPassword",
+            "H5/ResetPassword"
+          ],
+          "acceptanceCriteria": [
+            "Min 8 characters",
+            "At least 1 uppercase letter (A-Z)",
+            "At least 1 lowercase letter (a-z)",
+            "At least 1 digit (0-9)",
+            "Each rule shows pass/fail status in real-time"
+          ],
+          "title_zh": "密码校验规则"
+        },
+        {
+          "id": "F-AUTH-020",
+          "title": "Login Attempt Throttling",
+          "description": "5 consecutive wrong passwords locks account for 30 minutes. Lock is per-account (not IP). Auto-unlocks after timeout. Success resets counter.",
+          "priority": "P0",
+          "complexity": "M",
+          "linkedPages": [
+            "Screen/LoginError",
+            "H5/LoginError"
+          ],
+          "acceptanceCriteria": [
+            "5 consecutive failures -> account locked 30 minutes",
+            "Locked account: show banner 'Too many failed attempts. Account locked for 30 minutes.'",
+            "During lockout: login attempts rejected with lock message",
+            "Auto-unlock after 30 minutes, counter reset",
+            "Successful login resets error counter"
+          ],
+          "title_zh": "登录限错"
+        },
+        {
+          "id": "F-AUTH-021",
+          "title": "Registration Rate Limiting",
+          "description": "Limit registrations: max 5 per IP per hour, max 3 per device fingerprint per hour. Generic error message, does not reveal rules.",
+          "priority": "P0",
+          "complexity": "M",
+          "linkedPages": [],
+          "acceptanceCriteria": [
+            "Same IP: max 5 registrations/hour",
+            "Same device fingerprint: max 3 registrations/hour",
+            "Throttled: 'Too many attempts. Please try again later.'",
+            "Must not reveal specific limits"
+          ],
+          "title_zh": "注册限频"
+        },
+        {
+          "id": "F-AUTH-022",
+          "title": "Email Sending Rate Limiting",
+          "description": "Applies to both registration and forgot-password verification emails. Per-email: 60s cooldown + 5/hour max. Per-IP: 10 sends/hour max.",
+          "priority": "P0",
+          "complexity": "M",
+          "linkedPages": [],
+          "acceptanceCriteria": [
+            "Same email: 60s minimum between sends",
+            "Same email: max 5 per hour",
+            "Same IP: max 10 triggers per hour",
+            "Button shows 60s countdown after send",
+            "Hourly limit: 'Too many requests. Please try again later.'"
+          ],
+          "title_zh": "发信限频"
+        },
+        {
+          "id": "F-AUTH-023",
+          "title": "Error Message System",
+          "description": "Standardized error display across all auth flows: inline field errors (red text below input), banner errors (page top), toast notifications (network/server errors). Security-sensitive messages do not reveal internal logic.",
+          "priority": "P0",
+          "complexity": "M",
+          "linkedPages": [
+            "Screen/LoginError",
+            "H5/LoginError"
+          ],
+          "acceptanceCriteria": [
+            "Field errors: red text below input with error border",
+            "Account lock: top banner with warning icon",
+            "Network errors: toast notification",
+            "Server errors: toast notification",
+            "All error text in red with error icon where appropriate",
+            "Security messages do not expose system internals",
+            "All messages support i18n"
+          ],
+          "title_zh": "错误提示体系"
+        }
+      ]
+    }
+  ]
+}

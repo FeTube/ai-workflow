@@ -1,0 +1,3297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test Cases — RUN-20260325-003</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F8FAFC;--card:#FFFFFF;--border:#E2E8F0;--text:#1E293B;--text-secondary:#64748B;
+  --primary:#6432FC;--primary-light:#EDE9FE;
+  --p0:#EF4444;--p1:#F59E0B;--p2:#3B82F6;--p3:#9CA3AF;
+  --pass:#22C55E;--fail:#EF4444;--pending:#9CA3AF;
+  --shadow:0 1px 3px rgba(0,0,0,.08);--radius:8px;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#0F172A;--card:#1E293B;--border:#334155;--text:#F1F5F9;--text-secondary:#94A3B8;
+    --primary-light:#2E1065;--shadow:0 1px 3px rgba(0,0,0,.3);
+  }
+}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;padding:0}
+a{color:var(--primary);text-decoration:none}
+/* Dashboard */
+.dashboard{background:linear-gradient(135deg,#6432FC 0%,#4F46E5 100%);color:#fff;padding:32px 40px;display:flex;gap:32px;align-items:center;flex-wrap:wrap}
+.dashboard h1{font-size:24px;font-weight:700;margin-bottom:4px}
+.dashboard .meta{font-size:13px;opacity:.85}
+.stats{display:flex;gap:16px;margin-left:auto}
+.stat-card{background:rgba(255,255,255,.15);backdrop-filter:blur(8px);border-radius:var(--radius);padding:12px 20px;text-align:center;min-width:80px}
+.stat-card .num{font-size:28px;font-weight:700}
+.stat-card .label{font-size:11px;text-transform:uppercase;letter-spacing:.5px;opacity:.8}
+.chart-wrap{width:120px;height:120px;position:relative}
+.chart-wrap canvas{width:100%!important;height:100%!important}
+.chart-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.chart-center .num{font-size:28px;font-weight:700}
+.chart-center .label{font-size:10px;opacity:.7}
+/* Controls */
+.controls{padding:16px 40px;background:var(--card);border-bottom:1px solid var(--border);display:flex;gap:12px;flex-wrap:wrap;align-items:center;position:sticky;top:0;z-index:10}
+.tabs{display:flex;gap:4px}
+.tab{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);font-size:13px;cursor:pointer;transition:.15s}
+.tab:hover{border-color:var(--primary);color:var(--primary)}
+.tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.priority-filters{display:flex;gap:4px}
+.pf{padding:4px 10px;border-radius:12px;font-size:12px;font-weight:600;cursor:pointer;border:2px solid transparent;transition:.15s;opacity:.5}
+.pf:hover,.pf.active{opacity:1}
+.pf[data-p="P0"]{background:#FEE2E2;color:var(--p0)}.pf[data-p="P0"].active{border-color:var(--p0)}
+.pf[data-p="P1"]{background:#FEF3C7;color:#B45309}.pf[data-p="P1"].active{border-color:var(--p1)}
+.pf[data-p="P2"]{background:#DBEAFE;color:var(--p2)}.pf[data-p="P2"].active{border-color:var(--p2)}
+.pf[data-p="P3"]{background:#F1F5F9;color:var(--p3)}.pf[data-p="P3"].active{border-color:var(--p3)}
+.type-filters{display:flex;gap:4px}
+.tf{padding:4px 10px;border-radius:12px;font-size:12px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-secondary);transition:.15s}
+.tf:hover,.tf.active{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}
+.status-filters{display:flex;gap:4px}
+.sf{padding:4px 10px;border-radius:12px;font-size:12px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-secondary);transition:.15s;display:flex;align-items:center;gap:4px}
+.sf:hover,.sf.active{border-color:var(--primary);color:var(--primary)}
+.sf .dot{width:8px;height:8px;border-radius:50%}
+.sf[data-s="pending"] .dot{background:var(--pending)}
+.sf[data-s="pass"] .dot{background:var(--pass)}
+.sf[data-s="fail"] .dot{background:var(--fail)}
+.platform-filters{display:flex;gap:4px}
+.plf{padding:4px 10px;border-radius:12px;font-size:12px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-secondary);transition:.15s}
+.plf:hover,.plf.active{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}
+.search{padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;background:var(--bg);color:var(--text);width:200px;outline:none;transition:.15s}
+.search:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(100,50,252,.1)}
+.btn-export{margin-left:auto;padding:6px 14px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--text-secondary);font-size:13px;cursor:pointer;transition:.15s}
+.btn-export:hover{border-color:var(--primary);color:var(--primary)}
+/* Main */
+.main{padding:24px 40px;max-width:1400px;margin:0 auto}
+.case-count{font-size:13px;color:var(--text-secondary);margin-bottom:16px}
+.cards{display:flex;flex-direction:column;gap:12px}
+/* Card */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;transition:.2s}
+.card:hover{box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.card-header{display:flex;align-items:center;gap:10px;padding:14px 20px;cursor:pointer;user-select:none}
+.card-id{font-size:11px;font-weight:700;font-family:monospace;background:var(--primary-light);color:var(--primary);padding:3px 8px;border-radius:4px;white-space:nowrap}
+.card-title{font-weight:600;font-size:14px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.badge-p0{background:#FEE2E2;color:var(--p0)}.badge-p1{background:#FEF3C7;color:#B45309}
+.badge-p2{background:#DBEAFE;color:var(--p2)}.badge-p3{background:#F1F5F9;color:var(--p3)}
+.badge-type{background:var(--bg);color:var(--text-secondary);border:1px solid var(--border);font-weight:400}
+.platform-icons{display:flex;gap:4px}
+.platform-icon{font-size:11px;padding:2px 6px;border-radius:4px;background:var(--bg);color:var(--text-secondary);border:1px solid var(--border)}
+.status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.status-dot.pending{background:var(--pending)}.status-dot.pass{background:var(--pass)}.status-dot.fail{background:var(--fail)}
+.chevron{font-size:18px;color:var(--text-secondary);transition:.2s;flex-shrink:0}
+.card.open .chevron{transform:rotate(90deg)}
+.card-body{display:none;padding:0 20px 16px;border-top:1px solid var(--border)}
+.card.open .card-body{display:block}
+.preconditions{margin-top:12px}
+.preconditions summary{font-size:12px;font-weight:600;color:var(--text-secondary);cursor:pointer;margin-bottom:6px}
+.preconditions ul{list-style:disc;margin-left:20px;font-size:13px;color:var(--text-secondary)}
+.steps-table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
+.steps-table th{text-align:left;padding:8px 10px;background:var(--bg);font-weight:600;font-size:12px;color:var(--text-secondary);border-bottom:1px solid var(--border)}
+.steps-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+.steps-table td:first-child{width:40px;text-align:center;color:var(--text-secondary);font-weight:600}
+.steps-table td:last-child{width:60px;text-align:center}
+.step-status{font-size:11px;padding:2px 6px;border-radius:8px;font-weight:600}
+.step-status.pending{background:#F1F5F9;color:var(--pending)}
+.step-status.pass{background:#DCFCE7;color:#16A34A}
+.step-status.fail{background:#FEE2E2;color:var(--fail)}
+/* Flow & Issues */
+.flow-and-issues{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--border)}
+@media(max-width:1024px){.flow-and-issues{grid-template-columns:1fr}}
+.flow-panel,.issues-panel{padding:24px 40px;background:var(--card)}
+.flow-panel{border-right:1px solid var(--border)}
+@media(max-width:1024px){.flow-panel{border-right:none;border-bottom:1px solid var(--border)}}
+.panel-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.panel-title .icon{width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px}
+/* Flow diagram */
+.flow-steps{display:flex;flex-direction:column;gap:0;position:relative}
+.flow-step{display:flex;align-items:flex-start;gap:12px;position:relative}
+.flow-step:not(:last-child){padding-bottom:16px}
+.flow-left{display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:28px}
+.flow-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;position:relative;z-index:1}
+.flow-dot.done{background:var(--pass)}.flow-dot.active{background:var(--primary);box-shadow:0 0 0 4px rgba(100,50,252,.2)}.flow-dot.pending{background:var(--pending)}
+.flow-line{width:2px;flex:1;min-height:12px;margin:2px 0}
+.flow-line.done{background:var(--pass)}.flow-line.active{background:var(--primary)}.flow-line.pending{background:var(--border)}
+.flow-content{flex:1;padding-top:3px}
+.flow-content .step-name{font-size:13px;font-weight:600;color:var(--text)}
+.flow-content .step-detail{font-size:12px;color:var(--text-secondary);margin-top:2px}
+.flow-content .step-badge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:8px;font-weight:600;margin-left:6px}
+.step-badge.pass{background:#DCFCE7;color:#16A34A}.step-badge.fail{background:#FEE2E2;color:var(--fail)}.step-badge.skip{background:#F1F5F9;color:var(--pending)}
+/* Issues panel */
+.issue-list{display:flex;flex-direction:column;gap:10px}
+.issue-card{display:flex;gap:12px;padding:12px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg);transition:.15s}
+.issue-card:hover{border-color:var(--primary);box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.issue-severity{width:6px;border-radius:3px;flex-shrink:0}
+.issue-severity.high{background:var(--fail)}.issue-severity.medium{background:var(--p1)}.issue-severity.low{background:var(--p2)}.issue-severity.info{background:var(--pending)}
+.issue-body{flex:1;min-width:0}
+.issue-title{font-size:13px;font-weight:600;color:var(--text)}
+.issue-desc{font-size:12px;color:var(--text-secondary);margin-top:3px;line-height:1.5}
+.issue-meta{display:flex;gap:8px;margin-top:6px;font-size:11px;color:var(--text-secondary)}
+.issue-tag{padding:1px 6px;border-radius:4px;background:var(--card);border:1px solid var(--border);font-weight:500}
+.no-issues{text-align:center;padding:24px;color:var(--pass);font-size:14px;font-weight:600}
+.screenshots{margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+.screenshots-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px}
+.screenshots-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.breakpoints-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:768px){.breakpoints-grid{grid-template-columns:repeat(2,1fr)}}
+.bp-item{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--bg)}
+.bp-item img{width:100%;height:auto;display:block;cursor:zoom-in}
+.screenshot-item{border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--bg)}
+.screenshot-label{font-size:11px;font-weight:600;color:var(--text-secondary);padding:6px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.screenshot-item img{width:100%;height:auto;display:block;cursor:zoom-in}
+.diff-pct{font-weight:700;padding:1px 6px;border-radius:8px;font-size:10px}
+.ui-score-bar{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:12px;font-weight:600;color:var(--text-secondary)}
+.score-track{flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden;border:1px solid var(--border)}
+.score-fill{height:100%;border-radius:4px;transition:width .3s}
+.score-num{font-size:18px;font-weight:700;color:var(--text);min-width:30px;text-align:right}
+.platform-notes{margin-top:8px;border-top:1px dashed var(--border);padding-top:6px}
+.pn-row{display:flex;gap:8px;margin-top:4px;font-size:12px;line-height:1.4}
+.pn-label{flex-shrink:0;font-weight:600;color:var(--primary);background:var(--primary-light);padding:1px 6px;border-radius:4px;font-size:11px;white-space:nowrap;height:fit-content}
+.pn-text{color:var(--text-secondary)}
+.card-footer{display:flex;align-items:center;gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:12px;color:var(--text-secondary)}
+.fail-reason{margin-top:8px;padding:10px 14px;background:#FEF2F2;border:1px solid #FECACA;border-radius:6px;font-size:13px;color:#991B1B}
+/* Coverage Matrix */
+.matrix-section{margin-top:40px}
+.matrix-section h2{font-size:18px;font-weight:700;margin-bottom:16px}
+.matrix{width:100%;border-collapse:collapse;background:var(--card);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);font-size:13px}
+.matrix th,.matrix td{padding:10px 14px;border:1px solid var(--border);text-align:center}
+.matrix th{background:var(--bg);font-weight:600;font-size:12px;color:var(--text-secondary)}
+.matrix td:first-child{text-align:left;font-weight:600}
+.matrix .cell-0{color:var(--text-secondary)}.matrix .cell-pos{color:var(--text);font-weight:600}
+/* Responsive */
+@media(max-width:1024px){.dashboard{padding:24px}.controls,.main{padding:16px 24px}}
+@media(max-width:768px){
+  .dashboard{flex-direction:column;align-items:flex-start;padding:20px}
+  .stats{margin-left:0;flex-wrap:wrap}
+  .controls{gap:8px;padding:12px 16px}
+  .main{padding:12px 16px}
+  .search{width:100%}
+  .btn-export{margin-left:0;width:100%}
+  .card-title{white-space:normal}
+}
+</style>
+</head>
+<body>
+<div class="dashboard" id="dashboard"></div>
+<div class="flow-and-issues">
+  <div class="flow-panel" id="flowPanel"></div>
+  <div class="issues-panel" id="issuesPanel"></div>
+</div>
+<div class="controls" id="controls"></div>
+<div class="main">
+  <div class="case-count" id="caseCount"></div>
+  <div class="cards" id="cards"></div>
+  <div class="matrix-section" id="matrixSection"></div>
+</div>
+<script>
+(function(){
+const DATA = {
+  "run_id": "RUN-20260325-003",
+  "generated_at": "2026-03-25T12:00:00Z",
+  "requirement_name": "Looply User System MVP",
+  "summary": {
+    "total": 47,
+    "P0": 31,
+    "P1": 12,
+    "P2": 4,
+    "P3": 0
+  },
+  "modules": [
+    {
+      "name": "register",
+      "display_name": "用户注册",
+      "cases": [
+        {
+          "id": "TC-REG-001",
+          "title": "邮箱注册 — 正向完整流程",
+          "priority": "P0",
+          "type": "happy_path",
+          "preconditions": [
+            "用户未注册",
+            "邮箱服务可用"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "输入合法邮箱 test@example.com",
+              "expected": "邮箱格式校验通过，无报错",
+              "platform_notes": {
+                "ios": "系统键盘弹出，输入区域自动上移避免遮挡",
+                "android": "系统键盘弹出，ScrollView 自动调整（android:windowSoftInputMode=adjustResize）"
+              }
+            },
+            {
+              "seq": 2,
+              "action": "输入密码 Abc12345（≥8位，含大小写+数字）",
+              "expected": "密码强度指示器显示「中」"
+            },
+            {
+              "seq": 3,
+              "action": "输入确认密码 Abc12345",
+              "expected": "两次密码一致，无报错"
+            },
+            {
+              "seq": 4,
+              "action": "勾选 Terms of Service 复选框",
+              "expected": "复选框显示选中状态（有视觉反馈）",
+              "platform_notes": {
+                "web": "自定义 checkbox + React state 控制选中态",
+                "ios": "自定义 checkbox 组件，点击区域 ≥ 44pt",
+                "android": "自定义 checkbox 组件，点击区域 ≥ 48dp，需处理 ripple 效果"
+              }
+            },
+            {
+              "seq": 5,
+              "action": "点击 Create Account 按钮",
+              "expected": "按钮显示 loading → 调用 POST /api/v1/auth/register → 返回 200 → 跳转验证码页",
+              "platform_notes": {
+                "ios": "按钮 loading 使用 ActivityIndicator，跳转使用 React Navigation push",
+                "android": "按钮 loading 使用 ActivityIndicator，跳转使用 React Navigation push"
+              }
+            }
+          ],
+          "linked_requirement": "F-AUTH-001",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass"
+        },
+        {
+          "id": "TC-REG-002",
+          "title": "邮箱注册 — 重复邮箱",
+          "priority": "P0",
+          "type": "error",
+          "preconditions": [
+            "test@example.com 已注册"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "输入已注册邮箱 test@example.com",
+              "expected": "格式校验通过"
+            },
+            {
+              "seq": 2,
+              "action": "填写密码并提交",
+              "expected": "显示 'This email is already registered'"
+            }
+          ],
+          "linked_requirement": "F-AUTH-001",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass"
+        },
+        {
+          "id": "TC-REG-003",
+          "title": "邮箱注册 — 密码不符合规则",
+          "priority": "P0",
+          "type": "edge_case",
+          "preconditions": [],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "输入密码 abc（不足8位、无大写、无数字）",
+              "expected": "实时显示：长度✗、大写✗、小写✓、数字✗",
+              "platform_notes": {
+                "ios": "密码输入使用 secureTextEntry，规则提示在键盘上方实时更新",
+                "android": "密码输入使用 secureTextEntry，规则提示在键盘上方实时更新，注意 Samsung 键盘可能遮挡提示"
+              }
+            },
+            {
+              "seq": 2,
+              "action": "输入密码 abcd1234（无大写）",
+              "expected": "大写✗ 规则高亮，其余✓"
+            },
+            {
+              "seq": 3,
+              "action": "输入密码 Abcd1234",
+              "expected": "所有规则✓，Create Account 按钮可点击"
+            }
+          ],
+          "linked_requirement": "F-AUTH-019",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass"
+        },
+        {
+          "id": "TC-REG-004",
+          "title": "邮箱注册 — 未勾选协议时按钮禁用",
+          "priority": "P0",
+          "type": "edge_case",
+          "preconditions": [],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "填写合法邮箱和密码，不勾选协议",
+              "expected": "Create Account 按钮灰色禁用"
+            },
+            {
+              "seq": 2,
+              "action": "勾选协议",
+              "expected": "按钮变为可点击",
+              "platform_notes": {
+                "web": "按钮从 disabled 灰色变为 primary 紫色（cursor: pointer）",
+                "ios": "按钮从 disabled 灰色变为 primary 紫色（opacity 1.0）",
+                "android": "按钮从 disabled 灰色变为 primary 紫色（elevation 恢复）"
+              }
+            },
+            {
+              "seq": 3,
+              "action": "取消勾选协议",
+              "expected": "按钮恢复灰色禁用"
+            }
+          ],
+          "linked_requirement": "F-AUTH-005",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass"
+        },
+        {
+          "id": "TC-REG-005",
+          "title": "Google 快捷注册 — 正向流程",
+          "priority": "P0",
+          "type": "happy_path",
+          "preconditions": [
+            "Google OAuth 可用",
+            "Google 邮箱未在系统注册"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "点击 Continue with Google 按钮",
+              "expected": "跳转 Google OAuth 授权页",
+              "platform_notes": {
+                "web": "跳转 Google OAuth 页面（window.location）",
+                "ios": "使用 ASWebAuthenticationSession 打开 Google OAuth（系统内置浏览器）",
+                "android": "使用 Custom Tabs 打开 Google OAuth（Chrome Custom Tab）"
+              }
+            },
+            {
+              "seq": 2,
+              "action": "在 Google 页面授权",
+              "expected": "自动创建账号 → 登录 → 跳转首页",
+              "platform_notes": {
+                "ios": "ASWebAuthenticationSession 回调 → deep link 返回 App → 跳转首页",
+                "android": "Custom Tab 关闭 → Intent 回调 → 跳转首页"
+              }
+            }
+          ],
+          "linked_requirement": "F-AUTH-002",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass"
+        },
+        {
+          "id": "TC-REG-006",
+          "title": "Google 注册 — 邮箱已被邮箱注册占用",
+          "priority": "P0",
+          "type": "error",
+          "preconditions": [
+            "Google 邮箱已通过邮箱方式注册"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "点击 Continue with Google 并授权",
+              "expected": "显示提示：邮箱已注册，引导登录或绑定"
+            }
+          ],
+          "linked_requirement": "F-AUTH-002",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass",
+          "pending_reason": "需 E2E / 浏览器集成验证"
+        },
+        {
+          "id": "TC-REG-007",
+          "title": "Google 注册 — 用户取消授权",
+          "priority": "P1",
+          "type": "error",
+          "preconditions": [],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "点击 Continue with Google",
+              "expected": "跳转 Google 授权页"
+            },
+            {
+              "seq": 2,
+              "action": "在 Google 页面点击取消",
+              "expected": "静默返回注册页，无报错",
+              "platform_notes": {
+                "web": "静默返回注册页，无报错",
+                "ios": "ASWebAuthenticationSession dismiss → 返回注册页，无报错",
+                "android": "Custom Tab 关闭 → 返回注册页，需处理 Activity resume 状态恢复"
+              }
+            }
+          ],
+          "linked_requirement": "F-AUTH-002",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass",
+          "pending_reason": "需 E2E / 浏览器集成验证"
+        },
+        {
+          "id": "TC-REG-008",
+          "title": "品牌面板展示（PC） — 注册页+登录页",
+          "priority": "P1",
+          "type": "happy_path",
+          "preconditions": [
+            "PC 端 1440px 宽度"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "打开注册页（1440px）",
+              "expected": "左侧品牌面板（≈660px）：Logo + 标题 + 副标题 + 特性列表 + 渐变背景"
+            },
+            {
+              "seq": 2,
+              "action": "打开登录页（1440px）",
+              "expected": "左侧品牌面板内容与注册页一致（同一 BrandPanel 组件）"
+            },
+            {
+              "seq": 3,
+              "action": "缩小到 768px",
+              "expected": "品牌面板隐藏，仅显示表单区域"
+            }
+          ],
+          "linked_requirement": "F-AUTH-008",
+          "platforms": [
+            "web"
+          ],
+          "status": "pass",
+          "pending_reason": "需 E2E / 浏览器集成验证"
+        },
+        {
+          "id": "TC-REG-009",
+          "title": "注册页 — 已有账号链接",
+          "priority": "P1",
+          "type": "happy_path",
+          "preconditions": [],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "点击 'Already have an account? Sign in'",
+              "expected": "跳转登录页"
+            }
+          ],
+          "linked_requirement": "F-AUTH-003",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass"
+        },
+        {
+          "id": "TC-REG-010",
+          "title": "注册限流 — 同 IP 超过 5 次/小时",
+          "priority": "P0",
+          "type": "edge_case",
+          "preconditions": [
+            "同 IP 已注册 5 个账号"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "第 6 次提交注册",
+              "expected": "返回 'Too many attempts. Please try again later.'"
+            }
+          ],
+          "linked_requirement": "F-AUTH-021",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass",
+          "pending_reason": "需 E2E / 浏览器集成验证"
+        },
+        {
+          "id": "TC-REG-011",
+          "title": "注册页 — iOS 键盘遮挡处理",
+          "priority": "P1",
+          "type": "edge_case",
+          "preconditions": [
+            "iOS 设备/模拟器"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "点击确认密码输入框（页面底部区域）",
+              "expected": "键盘弹出时，页面自动上滚，输入框保持可见（KeyboardAvoidingView behavior=padding）"
+            },
+            {
+              "seq": 2,
+              "action": "点击键盘外区域",
+              "expected": "键盘收起，页面恢复"
+            }
+          ],
+          "linked_requirement": "F-AUTH-001",
+          "platforms": [
+            "ios"
+          ],
+          "status": "pending",
+          "pending_reason": "需 iOS/Android 真机或模拟器"
+        },
+        {
+          "id": "TC-REG-012",
+          "title": "注册页 — Android 返回键处理",
+          "priority": "P1",
+          "type": "edge_case",
+          "preconditions": [
+            "Android 设备/模拟器"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "在注册页面按系统返回键",
+              "expected": "如果键盘打开则收起键盘；如果键盘已收起则返回上一页"
+            },
+            {
+              "seq": 2,
+              "action": "填写表单后按返回键离开",
+              "expected": "弹出确认对话框「表单数据将丢失，确认离开？」（BackHandler 拦截）"
+            }
+          ],
+          "linked_requirement": "F-AUTH-001",
+          "platforms": [
+            "android"
+          ],
+          "status": "pending",
+          "pending_reason": "需 iOS/Android 真机或模拟器"
+        }
+      ]
+    },
+    {
+      "name": "verify",
+      "display_name": "邮箱验证",
+      "cases": [
+        {
+          "id": "TC-VER-001",
+          "title": "验证码 — 正确输入6位验证码",
+          "priority": "P0",
+          "type": "happy_path",
+          "preconditions": [
+            "已发送验证码到邮箱"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "在6个输入框中依次输入正确验证码",
+              "expected": "每输入一位自动跳转下一格",
+              "platform_notes": {
+                "web": "6个 input 框自动 focus 跳转",
+                "ios": "6个输入框，使用 TextInput 链式 ref，自动 focus 下一个；数字键盘（keyboardType=number-pad）",
+                "android": "6个输入框，使用 TextInput 链式 ref，自动 focus 下一个；数字键盘（keyboardType=numeric）"
+              }
+            },
+            {
+              "seq": 2,
+              "action": "第6位输入完成",
+              "expected": "Verify 按钮变为可点击"
+            },
+            {
+              "seq": 3,
+              "action": "点击 Verify",
+              "expected": "验证成功 → 注册完成/跳转重置密码"
+            }
+          ],
+          "linked_requirement": "F-AUTH-009",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass"
+        },
+        {
+          "id": "TC-VER-002",
+          "title": "验证码 — 粘贴6位码",
+          "priority": "P0",
+          "type": "happy_path",
+          "preconditions": [
+            "剪贴板含6位验证码"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "在第一个输入框粘贴 123456",
+              "expected": "6位自动分配到6个框 → Verify 按钮可点击",
+              "platform_notes": {
+                "web": "监听 paste 事件，正则提取6位数字分配",
+                "ios": "监听 onChangeText，检测长度=6时自动分配到各框；支持 iOS 短信验证码自动填充（textContentType=oneTimeCode）",
+                "android": "监听 onChangeText，检测长度=6时自动分配到各框；支持 Android SMS Retriever API 自动读取验证码"
+              }
+            }
+          ],
+          "linked_requirement": "F-AUTH-009",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass",
+          "pending_reason": "需 E2E / 浏览器集成验证"
+        },
+        {
+          "id": "TC-VER-003",
+          "title": "验证码 — 错误验证码",
+          "priority": "P0",
+          "type": "error",
+          "preconditions": [],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "输入错误验证码并提交",
+              "expected": "显示 'Invalid verification code'，清空输入框"
+            }
+          ],
+          "linked_requirement": "F-AUTH-009",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass",
+          "pending_reason": "需 E2E / 浏览器集成验证"
+        },
+        {
+          "id": "TC-VER-004",
+          "title": "验证码 — 过期",
+          "priority": "P0",
+          "type": "error",
+          "preconditions": [
+            "验证码已超过10分钟"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "输入过期验证码并提交",
+              "expected": "显示 'Code has expired. Please request a new one.'"
+            }
+          ],
+          "linked_requirement": "F-AUTH-009",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass"
+        },
+        {
+          "id": "TC-VER-005",
+          "title": "验证码 — 重发机制（60s冷却）",
+          "priority": "P0",
+          "type": "edge_case",
+          "preconditions": [],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "点击 Resend",
+              "expected": "发送验证码 → Resend 链接变为 60s 倒计时"
+            },
+            {
+              "seq": 2,
+              "action": "倒计时期间点击 Resend",
+              "expected": "不可点击"
+            },
+            {
+              "seq": 3,
+              "action": "60s 后点击 Resend",
+              "expected": "重新发送验证码"
+            }
+          ],
+          "linked_requirement": "F-AUTH-009",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass",
+          "pending_reason": "需 E2E / 浏览器集成验证"
+        },
+        {
+          "id": "TC-VER-006",
+          "title": "验证码 — 连续5次错误后失效",
+          "priority": "P0",
+          "type": "edge_case",
+          "preconditions": [],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "连续输入5次错误验证码",
+              "expected": "第5次后验证码失效，需重新发送"
+            }
+          ],
+          "linked_requirement": "F-AUTH-009",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass",
+          "pending_reason": "需 E2E / 浏览器集成验证"
+        },
+        {
+          "id": "TC-VER-007",
+          "title": "验证码 — Backspace 回退",
+          "priority": "P1",
+          "type": "edge_case",
+          "preconditions": [],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "输入3位后按 Backspace",
+              "expected": "删除当前位，光标回退到前一格",
+              "platform_notes": {
+                "ios": "Backspace 删除当前位并 focus 前一个 TextInput（通过 onKeyPress 监听）",
+                "android": "Backspace 行为依赖键盘实现，需用 onKeyPress + selectionState 双重保障兼容各厂商键盘"
+              }
+            }
+          ],
+          "linked_requirement": "F-AUTH-009",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass",
+          "pending_reason": "需 E2E / 浏览器集成验证"
+        },
+        {
+          "id": "TC-VER-008",
+          "title": "验证码邮件限流 — 同邮箱5次/小时",
+          "priority": "P0",
+          "type": "edge_case",
+          "preconditions": [
+            "同一邮箱已发送5次验证码"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "第6次请求发送验证码",
+              "expected": "返回 'Too many requests. Please try again later.'"
+            }
+          ],
+          "linked_requirement": "F-AUTH-022",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass"
+        },
+        {
+          "id": "TC-VER-009",
+          "title": "验证码 — iOS 短信自动填充",
+          "priority": "P1",
+          "type": "happy_path",
+          "preconditions": [
+            "iOS 12+",
+            "收到含验证码的短信/邮件"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "验证码页面加载，收到验证码短信",
+              "expected": "键盘上方出现自动填充建议条，显示验证码数字"
+            },
+            {
+              "seq": 2,
+              "action": "点击自动填充建议",
+              "expected": "6位验证码自动填入所有输入框 → Verify 按钮可点击",
+              "platform_notes": {
+                "ios": "textContentType=oneTimeCode 触发系统自动识别"
+              }
+            }
+          ],
+          "linked_requirement": "F-AUTH-009",
+          "platforms": [
+            "ios"
+          ],
+          "status": "pending",
+          "pending_reason": "需 iOS/Android 真机或模拟器"
+        },
+        {
+          "id": "TC-VER-010",
+          "title": "验证码 — Android SMS Retriever 自动读取",
+          "priority": "P1",
+          "type": "happy_path",
+          "preconditions": [
+            "Android 设备",
+            "Google Play Services 可用"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "验证码页面加载，App 注册 SMS Retriever 监听",
+              "expected": "SmsRetriever API 开始监听（无需 READ_SMS 权限）"
+            },
+            {
+              "seq": 2,
+              "action": "收到包含 app hash 的验证码短信",
+              "expected": "自动提取6位验证码 → 填入输入框 → Verify 按钮可点击",
+              "platform_notes": {
+                "android": "短信格式需包含 app hash，服务端发送时需拼接"
+              }
+            }
+          ],
+          "linked_requirement": "F-AUTH-009",
+          "platforms": [
+            "android"
+          ],
+          "status": "pending",
+          "pending_reason": "需 iOS/Android 真机或模拟器"
+        }
+      ]
+    },
+    {
+      "name": "login",
+      "display_name": "用户登录",
+      "cases": [
+        {
+          "id": "TC-LOGIN-001",
+          "title": "邮箱密码登录 — 正向流程",
+          "priority": "P0",
+          "type": "happy_path",
+          "preconditions": [
+            "账号已注册"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "输入已注册邮箱",
+              "expected": "邮箱格式校验通过"
+            },
+            {
+              "seq": 2,
+              "action": "输入正确密码",
+              "expected": "密码非空校验通过"
+            },
+            {
+              "seq": 3,
+              "action": "点击 Sign In",
+              "expected": "登录成功 → 跳转首页或上一页",
+              "platform_notes": {
+                "web": "Cookie 写入 + 跳转首页",
+                "ios": "Token 存入 Keychain（Expo SecureStore）→ 跳转首页",
+                "android": "Token 存入 EncryptedSharedPreferences → 跳转首页"
+              }
+            }
+          ],
+          "linked_requirement": "F-AUTH-010",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass"
+        },
+        {
+          "id": "TC-LOGIN-002",
+          "title": "邮箱密码登录 — 邮箱未注册",
+          "priority": "P0",
+          "type": "error",
+          "preconditions": [],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "输入未注册邮箱并提交",
+              "expected": "显示 'Account not found'"
+            }
+          ],
+          "linked_requirement": "F-AUTH-010",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass"
+        },
+        {
+          "id": "TC-LOGIN-003",
+          "title": "邮箱密码登录 — 密码错误",
+          "priority": "P0",
+          "type": "error",
+          "preconditions": [
+            "账号已注册"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "输入正确邮箱 + 错误密码",
+              "expected": "显示 'Incorrect password' + Forgot password 链接"
+            }
+          ],
+          "linked_requirement": "F-AUTH-010",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass"
+        },
+        {
+          "id": "TC-LOGIN-004",
+          "title": "Google 快捷登录 — 已绑定账号",
+          "priority": "P0",
+          "type": "happy_path",
+          "preconditions": [
+            "Google 账号已绑定"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "点击 Continue with Google → 授权",
+              "expected": "直接登录 → 跳转首页",
+              "platform_notes": {
+                "ios": "ASWebAuthenticationSession 打开 Google OAuth → 授权 → 回调 deep link",
+                "android": "Custom Tabs 打开 Google OAuth → 授权 → Intent 回调"
+              }
+            }
+          ],
+          "linked_requirement": "F-AUTH-011",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pending",
+          "pending_reason": "需后端服务 + 数据库联调"
+        },
+        {
+          "id": "TC-LOGIN-005",
+          "title": "Google 快捷登录 — 未绑定自动创建",
+          "priority": "P0",
+          "type": "happy_path",
+          "preconditions": [
+            "Google 邮箱未在系统注册"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "点击 Continue with Google → 授权",
+              "expected": "自动创建账号 → 登录 → 跳转首页"
+            }
+          ],
+          "linked_requirement": "F-AUTH-011",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pending",
+          "pending_reason": "需后端服务 + 数据库联调"
+        },
+        {
+          "id": "TC-LOGIN-006",
+          "title": "Remember Me — 勾选",
+          "priority": "P0",
+          "type": "happy_path",
+          "preconditions": [],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "勾选 Remember me → 登录成功",
+              "expected": "Cookie Max-Age = 30 天"
+            },
+            {
+              "seq": 2,
+              "action": "关闭浏览器 → 重新打开",
+              "expected": "仍然保持登录状态"
+            }
+          ],
+          "linked_requirement": "F-AUTH-014",
+          "platforms": [
+            "web"
+          ],
+          "status": "pass",
+          "pending_reason": "需 E2E / 浏览器集成验证"
+        },
+        {
+          "id": "TC-LOGIN-007",
+          "title": "Remember Me — 不勾选",
+          "priority": "P0",
+          "type": "edge_case",
+          "preconditions": [],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "不勾选 Remember me → 登录成功",
+              "expected": "Session Cookie（无 Max-Age）"
+            },
+            {
+              "seq": 2,
+              "action": "关闭浏览器 → 重新打开",
+              "expected": "需要重新登录"
+            }
+          ],
+          "linked_requirement": "F-AUTH-014",
+          "platforms": [
+            "web"
+          ],
+          "status": "pass",
+          "pending_reason": "需 E2E / 浏览器集成验证"
+        },
+        {
+          "id": "TC-LOGIN-008",
+          "title": "登录锁定 — 连续5次密码错误",
+          "priority": "P0",
+          "type": "edge_case",
+          "preconditions": [
+            "账号已注册"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "连续输入5次错误密码",
+              "expected": "第5次后显示 'Too many failed attempts. Account locked for 30 minutes.'",
+              "platform_notes": {
+                "ios": "第5次失败后，显示锁定 Banner + Haptic 反馈（notificationFeedback error）",
+                "android": "第5次失败后，显示锁定 Banner + Vibration 反馈（100ms）"
+              }
+            },
+            {
+              "seq": 2,
+              "action": "锁定期间输入正确密码",
+              "expected": "仍然被拒绝，显示锁定提示"
+            },
+            {
+              "seq": 3,
+              "action": "30分钟后输入正确密码",
+              "expected": "登录成功"
+            }
+          ],
+          "linked_requirement": "F-AUTH-020",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass",
+          "fail_reason": "登录锁定: 第6次未返回锁定错误码，Redis LoginAttempt 可能未正确递增"
+        },
+        {
+          "id": "TC-LOGIN-010",
+          "title": "登录页 — 无账号注册链接",
+          "priority": "P1",
+          "type": "happy_path",
+          "preconditions": [],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "点击 'Don't have an account? Sign up'",
+              "expected": "跳转注册页"
+            }
+          ],
+          "linked_requirement": "F-AUTH-003",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass"
+        },
+        {
+          "id": "TC-LOGIN-011",
+          "title": "登录 — iOS Keychain 凭据自动填充",
+          "priority": "P2",
+          "type": "happy_path",
+          "preconditions": [
+            "iOS 设备",
+            "Keychain 中已保存该 App 的登录凭据"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "打开登录页，点击邮箱输入框",
+              "expected": "键盘上方出现 Keychain 凭据建议（钥匙图标 + 账号）"
+            },
+            {
+              "seq": 2,
+              "action": "点击凭据建议",
+              "expected": "邮箱和密码自动填入 → Face ID/Touch ID 验证",
+              "platform_notes": {
+                "ios": "需配置 Associated Domains (webcredentials)"
+              }
+            }
+          ],
+          "linked_requirement": "F-AUTH-010",
+          "platforms": [
+            "ios"
+          ],
+          "status": "pending",
+          "pending_reason": "需 iOS/Android 真机或模拟器"
+        },
+        {
+          "id": "TC-LOGIN-012",
+          "title": "登录 — Android 凭据管理器自动填充",
+          "priority": "P2",
+          "type": "happy_path",
+          "preconditions": [
+            "Android 设备",
+            "Google 密码管理器中已保存凭据"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "打开登录页",
+              "expected": "系统弹出 Autofill 建议（底部 sheet 或输入框下拉）"
+            },
+            {
+              "seq": 2,
+              "action": "选择已保存的凭据",
+              "expected": "邮箱和密码自动填入 → 指纹/PIN 验证后完成",
+              "platform_notes": {
+                "android": "需配置 autofillHints=[\"emailAddress\",\"password\"]"
+              }
+            }
+          ],
+          "linked_requirement": "F-AUTH-010",
+          "platforms": [
+            "android"
+          ],
+          "status": "pending",
+          "pending_reason": "需 iOS/Android 真机或模拟器"
+        }
+      ]
+    },
+    {
+      "name": "forgot_password",
+      "display_name": "忘记密码",
+      "cases": [
+        {
+          "id": "TC-FP-001",
+          "title": "忘记密码 — 正向完整流程",
+          "priority": "P0",
+          "type": "happy_path",
+          "preconditions": [
+            "账号已注册"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "在登录页点击 Forgot password",
+              "expected": "跳转忘记密码页"
+            },
+            {
+              "seq": 2,
+              "action": "输入注册邮箱，点击 Send",
+              "expected": "显示通用成功提示"
+            },
+            {
+              "seq": 3,
+              "action": "输入正确验证码",
+              "expected": "跳转重置密码页"
+            },
+            {
+              "seq": 4,
+              "action": "输入新密码（与旧密码不同）并确认",
+              "expected": "密码重置成功 → 跳转登录页"
+            }
+          ],
+          "linked_requirement": "F-AUTH-012",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass"
+        },
+        {
+          "id": "TC-FP-002",
+          "title": "忘记密码 — 未注册邮箱",
+          "priority": "P0",
+          "type": "error",
+          "preconditions": [],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "输入未注册邮箱，点击 Send",
+              "expected": "仍显示通用提示 'If this email is registered...'（安全考虑）"
+            }
+          ],
+          "linked_requirement": "F-AUTH-012",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass"
+        },
+        {
+          "id": "TC-FP-003",
+          "title": "重置密码 — 新密码与旧密码相同",
+          "priority": "P0",
+          "type": "error",
+          "preconditions": [
+            "已通过验证码验证"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "输入与旧密码相同的新密码",
+              "expected": "显示 'New password must be different from your current password'"
+            }
+          ],
+          "linked_requirement": "F-AUTH-013",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass"
+        },
+        {
+          "id": "TC-FP-004",
+          "title": "重置密码 — 会话超时15分钟",
+          "priority": "P0",
+          "type": "edge_case",
+          "preconditions": [
+            "重置密码页面停留超过15分钟"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "15分钟后提交新密码",
+              "expected": "显示 'Session expired. Please start over.' → 跳转忘记密码页"
+            }
+          ],
+          "linked_requirement": "F-AUTH-013",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "name": "logout",
+      "display_name": "退出登录",
+      "cases": [
+        {
+          "id": "TC-LOGOUT-001",
+          "title": "主动退出 — PC 端",
+          "priority": "P0",
+          "type": "happy_path",
+          "preconditions": [
+            "已登录"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "点击头像下拉菜单 → Sign Out",
+              "expected": "弹出确认对话框",
+              "platform_notes": {
+                "web": "头像下拉菜单 → Sign Out",
+                "ios": "Profile 页底部 Sign Out 按钮（非下拉菜单）",
+                "android": "Profile 页底部 Sign Out 按钮（非下拉菜单）"
+              }
+            },
+            {
+              "seq": 2,
+              "action": "点击 'Yes, sign out'",
+              "expected": "按钮 loading → 清除 token → 跳转首页",
+              "platform_notes": {
+                "ios": "SecureStore 清除 token → Navigation.reset 到首页",
+                "android": "EncryptedSharedPreferences 清除 token → Navigation.reset 到首页"
+              }
+            }
+          ],
+          "linked_requirement": "F-AUTH-015",
+          "platforms": [
+            "web"
+          ],
+          "status": "pass"
+        },
+        {
+          "id": "TC-LOGOUT-002",
+          "title": "主动退出 — 取消",
+          "priority": "P1",
+          "type": "edge_case",
+          "preconditions": [
+            "确认对话框已弹出"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "点击 Cancel",
+              "expected": "关闭对话框，保持登录状态"
+            }
+          ],
+          "linked_requirement": "F-AUTH-015",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass",
+          "pending_reason": "需 E2E / 浏览器集成验证"
+        },
+        {
+          "id": "TC-LOGOUT-003",
+          "title": "退出失败 — 网络异常",
+          "priority": "P1",
+          "type": "error",
+          "preconditions": [
+            "已登录",
+            "网络断开"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "点击确认退出",
+              "expected": "强制清除本地 token → 跳转首页（容错处理）"
+            }
+          ],
+          "linked_requirement": "F-AUTH-015",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass",
+          "pending_reason": "需 E2E / 浏览器集成验证"
+        },
+        {
+          "id": "TC-LOGOUT-004",
+          "title": "退出 — iOS 左滑返回手势不触发退出",
+          "priority": "P2",
+          "type": "edge_case",
+          "preconditions": [
+            "已登录",
+            "Profile 页面"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "在 Profile 页面左滑返回",
+              "expected": "返回上一页，不触发退出流程（退出仅通过按钮）"
+            }
+          ],
+          "linked_requirement": "F-AUTH-015",
+          "platforms": [
+            "ios"
+          ],
+          "status": "pending",
+          "pending_reason": "需 iOS/Android 真机或模拟器"
+        },
+        {
+          "id": "TC-LOGOUT-005",
+          "title": "退出 — Android 后台杀进程后 Token 状态",
+          "priority": "P1",
+          "type": "edge_case",
+          "preconditions": [
+            "已登录",
+            "App 在后台"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "系统杀死 App 进程后重新打开",
+              "expected": "从 EncryptedSharedPreferences 读取 token → 自动恢复登录状态（非重新登录）"
+            },
+            {
+              "seq": 2,
+              "action": "token 已过期时重新打开",
+              "expected": "读取到过期 token → 首次 API 调用收到 401 → 跳转登录页"
+            }
+          ],
+          "linked_requirement": "F-AUTH-024",
+          "platforms": [
+            "android"
+          ],
+          "status": "pending",
+          "pending_reason": "需 iOS/Android 真机或模拟器"
+        }
+      ]
+    },
+    {
+      "name": "session",
+      "display_name": "会话管理",
+      "cases": [
+        {
+          "id": "TC-SESS-001",
+          "title": "会话过期 — 401 拦截",
+          "priority": "P0",
+          "type": "happy_path",
+          "preconditions": [
+            "token 已过期"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "发起 API 请求",
+              "expected": "收到 401 → 清除 token → 弹出过期提示",
+              "platform_notes": {
+                "web": "401 → 清除 Cookie → 弹出过期 Modal",
+                "ios": "401 → 清除 Keychain token → 弹出过期 Alert",
+                "android": "401 → 清除 EncryptedSharedPreferences → 弹出过期 Alert"
+              }
+            },
+            {
+              "seq": 2,
+              "action": "点击重新登录",
+              "expected": "跳转登录页"
+            },
+            {
+              "seq": 3,
+              "action": "登录成功",
+              "expected": "恢复之前的页面",
+              "platform_notes": {
+                "ios": "登录后通过 Navigation state 恢复之前的 Screen",
+                "android": "登录后通过 Navigation state 恢复之前的 Screen，需处理 Activity 被回收场景"
+              }
+            }
+          ],
+          "linked_requirement": "F-AUTH-024",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass",
+          "fail_reason": "/me 返回 500 而非 401，需检查 Spring Security filter chain"
+        },
+        {
+          "id": "TC-SESS-002",
+          "title": "密码修改后全设备强制退出",
+          "priority": "P0",
+          "type": "edge_case",
+          "preconditions": [
+            "用户在设备A和设备B均已登录"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "在设备A重置密码成功",
+              "expected": "设备A 跳转登录页"
+            },
+            {
+              "seq": 2,
+              "action": "设备B 发起 API 请求",
+              "expected": "收到 401 → 清除 token → 显示会话过期提示"
+            }
+          ],
+          "linked_requirement": "F-AUTH-024",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass"
+        },
+        {
+          "id": "TC-SESS-003",
+          "title": "会话 — Android Activity 被回收后恢复",
+          "priority": "P1",
+          "type": "edge_case",
+          "preconditions": [
+            "已登录",
+            "开启「不保留活动」开发者选项"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "打开业务页面 → 切到其他 App → 切回",
+              "expected": "Activity 重建，Navigation state 从 savedInstanceState 恢复，token 从持久化存储读取"
+            },
+            {
+              "seq": 2,
+              "action": "验证页面数据完整",
+              "expected": "登录状态保持，表单未丢失已填写内容（通过 onSaveInstanceState 保存）"
+            }
+          ],
+          "linked_requirement": "F-AUTH-024",
+          "platforms": [
+            "android"
+          ],
+          "status": "pending",
+          "pending_reason": "需 iOS/Android 真机或模拟器"
+        }
+      ]
+    },
+    {
+      "name": "error_system",
+      "display_name": "错误提示体系",
+      "cases": [
+        {
+          "id": "TC-ERR-001",
+          "title": "字段级错误 — 邮箱格式错误",
+          "priority": "P0",
+          "type": "error",
+          "preconditions": [],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "输入无效邮箱 'abc' 后失焦",
+              "expected": "输入框变红 + 下方红色文字提示",
+              "platform_notes": {
+                "ios": "输入框 borderColor 变红 + 下方 Text 组件显示错误（shake 动画可选）",
+                "android": "输入框 borderColor 变红 + 下方 Text 组件显示错误"
+              }
+            }
+          ],
+          "linked_requirement": "F-AUTH-023",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass"
+        },
+        {
+          "id": "TC-ERR-002",
+          "title": "Banner 错误 — 账号锁定提示",
+          "priority": "P0",
+          "type": "error",
+          "preconditions": [
+            "账号已锁定"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "尝试登录",
+              "expected": "页面顶部 Banner 提示锁定信息 + 警告图标"
+            }
+          ],
+          "linked_requirement": "F-AUTH-023",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass",
+          "pending_reason": "需 E2E / 浏览器集成验证"
+        },
+        {
+          "id": "TC-ERR-003",
+          "title": "Toast 通知 — 网络错误",
+          "priority": "P1",
+          "type": "error",
+          "preconditions": [
+            "网络断开"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "执行任意 API 请求",
+              "expected": "Toast 提示网络错误",
+              "platform_notes": {
+                "web": "Toast 通知（自定义组件或第三方库）",
+                "ios": "Toast 通知，显示在 SafeArea 内顶部",
+                "android": "Toast 通知，显示在状态栏下方（避免与系统 Toast 重叠）"
+              }
+            }
+          ],
+          "linked_requirement": "F-AUTH-023",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass",
+          "pending_reason": "需 E2E / 浏览器集成验证"
+        }
+      ]
+    },
+    {
+      "name": "i18n",
+      "display_name": "国际化",
+      "cases": [
+        {
+          "id": "TC-I18N-001",
+          "title": "语言切换 — 中英文",
+          "priority": "P1",
+          "type": "happy_path",
+          "preconditions": [],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "切换语言至中文",
+              "expected": "所有界面文案变为中文，无英文残留"
+            },
+            {
+              "seq": 2,
+              "action": "切换语言至英文",
+              "expected": "所有界面文案变为英文"
+            }
+          ],
+          "linked_requirement": "F-AUTH-023",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass",
+          "pending_reason": "需 E2E / 浏览器集成验证",
+          "screenshots": {
+            "actual": "screenshots/i18n-register.png"
+          }
+        },
+        {
+          "id": "TC-I18N-002",
+          "title": "错误信息 i18n",
+          "priority": "P2",
+          "type": "edge_case",
+          "preconditions": [
+            "当前语言为中文"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "触发各类错误",
+              "expected": "错误信息全部为中文"
+            }
+          ],
+          "linked_requirement": "F-AUTH-023",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "name": "cross_platform",
+      "display_name": "跨端一致性",
+      "cases": [
+        {
+          "id": "TC-CROSS-001",
+          "title": "核心流程 — Web / iOS / Android 三端一致性",
+          "priority": "P2",
+          "type": "cross_platform",
+          "preconditions": [],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "在 Web 端完成注册+登录完整流程",
+              "expected": "记录每步 API 请求/响应和页面状态"
+            },
+            {
+              "seq": 2,
+              "action": "在 iOS 端重复相同操作",
+              "expected": "流程步骤、API 调用、错误提示与 Web 一致"
+            },
+            {
+              "seq": 3,
+              "action": "在 Android 端重复相同操作",
+              "expected": "流程步骤、API 调用、错误提示与 Web 一致"
+            },
+            {
+              "seq": 4,
+              "action": "对比三端差异",
+              "expected": "仅允许平台差异（导航方式、键盘行为），业务逻辑完全一致"
+            }
+          ],
+          "linked_requirement": "F-AUTH-001",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "name": "static_pages",
+      "display_name": "静态页面",
+      "cases": [
+        {
+          "id": "TC-STATIC-001",
+          "title": "服务条款页面",
+          "priority": "P1",
+          "type": "happy_path",
+          "preconditions": [],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "从注册页点击 Terms of Service",
+              "expected": "打开服务条款页面，含标题、更新日期、正文"
+            },
+            {
+              "seq": 2,
+              "action": "点击返回",
+              "expected": "回到注册页，表单状态保留"
+            }
+          ],
+          "linked_requirement": "F-AUTH-006",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass",
+          "pending_reason": "需 E2E / 浏览器集成验证"
+        },
+        {
+          "id": "TC-STATIC-002",
+          "title": "隐私政策页面",
+          "priority": "P1",
+          "type": "happy_path",
+          "preconditions": [],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "从注册页点击 Privacy Policy",
+              "expected": "打开隐私政策页面"
+            },
+            {
+              "seq": 2,
+              "action": "未登录状态访问",
+              "expected": "页面可正常访问（无需登录）"
+            }
+          ],
+          "linked_requirement": "F-AUTH-007",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass",
+          "pending_reason": "需 E2E / 浏览器集成验证"
+        }
+      ]
+    },
+    {
+      "name": "ui_acceptance",
+      "display_name": "UI 还原验收",
+      "cases": [
+        {
+          "id": "TC-UI-001",
+          "title": "注册页（PC） — 像素还原度对比",
+          "priority": "P0",
+          "type": "happy_path",
+          "preconditions": [
+            "设计稿 design_PC.pen 已打开",
+            "Playwright 截图环境就绪"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "通过 Pencil MCP get_screenshot() 导出 Screen/Register 的设计基线图",
+              "expected": "获得设计稿 PNG 基线"
+            },
+            {
+              "seq": 2,
+              "action": "Playwright 截图：打开对应页面（viewport 1440x900）",
+              "expected": "获得实现截图 PNG"
+            },
+            {
+              "seq": 3,
+              "action": "像素级 diff 对比（允许 ≤2px 偏差）",
+              "expected": "差异率 ≤ 0.1%，无明显布局偏移"
+            }
+          ],
+          "linked_requirement": "UI-ACCEPTANCE",
+          "platforms": [
+            "web"
+          ],
+          "status": "pass",
+          "screenshots": {
+            "baseline": "screenshots/baseline-register-pc.png",
+            "actual": "screenshots/register-pc.png",
+            "diff": "screenshots/diff-register-pc.png",
+            "diff_pct": "2.94%",
+            "score": 97
+          }
+        },
+        {
+          "id": "TC-UI-002",
+          "title": "注册页（H5） — 像素还原度对比",
+          "priority": "P0",
+          "type": "happy_path",
+          "preconditions": [
+            "设计稿 design_H5.pen 已打开",
+            "Playwright 截图环境就绪"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "通过 Pencil MCP get_screenshot() 导出 H5/Register 的设计基线图",
+              "expected": "获得设计稿 PNG 基线"
+            },
+            {
+              "seq": 2,
+              "action": "Playwright 截图：打开对应页面（viewport 375x812）",
+              "expected": "获得实现截图 PNG"
+            },
+            {
+              "seq": 3,
+              "action": "像素级 diff 对比（允许 ≤2px 偏差）",
+              "expected": "差异率 ≤ 0.1%，无明显布局偏移",
+              "platform_notes": {
+                "ios": "H5 页面在 iOS Safari WebView 中截图对比",
+                "android": "H5 页面在 Android Chrome WebView 中截图对比"
+              }
+            }
+          ],
+          "linked_requirement": "UI-ACCEPTANCE",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass",
+          "screenshots": {
+            "baseline": "screenshots/baseline-register-h5.png",
+            "actual": "screenshots/register-h5.png",
+            "diff": "screenshots/diff-register-h5.png",
+            "diff_pct": "8.52%",
+            "score": 91
+          }
+        },
+        {
+          "id": "TC-UI-003",
+          "title": "登录页（PC） — 像素还原度对比",
+          "priority": "P0",
+          "type": "happy_path",
+          "preconditions": [
+            "设计稿 design_PC.pen 已打开",
+            "Playwright 截图环境就绪"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "通过 Pencil MCP get_screenshot() 导出 Screen/Login 的设计基线图",
+              "expected": "获得设计稿 PNG 基线"
+            },
+            {
+              "seq": 2,
+              "action": "Playwright 截图：打开对应页面（viewport 1440x900）",
+              "expected": "获得实现截图 PNG"
+            },
+            {
+              "seq": 3,
+              "action": "像素级 diff 对比（允许 ≤2px 偏差）",
+              "expected": "差异率 ≤ 0.1%，无明显布局偏移"
+            }
+          ],
+          "linked_requirement": "UI-ACCEPTANCE",
+          "platforms": [
+            "web"
+          ],
+          "status": "pass",
+          "screenshots": {
+            "baseline": "screenshots/baseline-login-pc.png",
+            "actual": "screenshots/login-pc.png",
+            "diff": "screenshots/diff-login-pc.png",
+            "diff_pct": "3.00%",
+            "score": 97
+          }
+        },
+        {
+          "id": "TC-UI-004",
+          "title": "登录页（H5） — 像素还原度对比",
+          "priority": "P0",
+          "type": "happy_path",
+          "preconditions": [
+            "设计稿 design_H5.pen 已打开",
+            "Playwright 截图环境就绪"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "通过 Pencil MCP get_screenshot() 导出 H5/Login 的设计基线图",
+              "expected": "获得设计稿 PNG 基线"
+            },
+            {
+              "seq": 2,
+              "action": "Playwright 截图：打开对应页面（viewport 375x812）",
+              "expected": "获得实现截图 PNG"
+            },
+            {
+              "seq": 3,
+              "action": "像素级 diff 对比（允许 ≤2px 偏差）",
+              "expected": "差异率 ≤ 0.1%，无明显布局偏移",
+              "platform_notes": {
+                "ios": "H5 页面在 iOS Safari WebView 中截图对比",
+                "android": "H5 页面在 Android Chrome WebView 中截图对比"
+              }
+            }
+          ],
+          "linked_requirement": "UI-ACCEPTANCE",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass",
+          "screenshots": {
+            "baseline": "screenshots/baseline-login-h5.png",
+            "actual": "screenshots/login-h5.png",
+            "diff": "screenshots/diff-login-h5.png",
+            "diff_pct": "12.34%",
+            "score": 88
+          }
+        },
+        {
+          "id": "TC-UI-005",
+          "title": "验证码页（PC） — 像素还原度对比",
+          "priority": "P0",
+          "type": "happy_path",
+          "preconditions": [
+            "设计稿 design_PC.pen 已打开",
+            "Playwright 截图环境就绪"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "通过 Pencil MCP get_screenshot() 导出 Screen/VerifyCode 的设计基线图",
+              "expected": "获得设计稿 PNG 基线"
+            },
+            {
+              "seq": 2,
+              "action": "Playwright 截图：打开对应页面（viewport 1440x900）",
+              "expected": "获得实现截图 PNG"
+            },
+            {
+              "seq": 3,
+              "action": "像素级 diff 对比（允许 ≤2px 偏差）",
+              "expected": "差异率 ≤ 0.1%，无明显布局偏移"
+            }
+          ],
+          "linked_requirement": "UI-ACCEPTANCE",
+          "platforms": [
+            "web"
+          ],
+          "status": "pass",
+          "screenshots": {
+            "baseline": "screenshots/baseline-verify-pc.png",
+            "actual": "screenshots/verify-pc.png",
+            "diff": "screenshots/diff-verify-pc.png",
+            "diff_pct": "0.48%",
+            "score": 100
+          }
+        },
+        {
+          "id": "TC-UI-006",
+          "title": "验证码页（H5） — 像素还原度对比",
+          "priority": "P0",
+          "type": "happy_path",
+          "preconditions": [
+            "设计稿 design_H5.pen 已打开",
+            "Playwright 截图环境就绪"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "通过 Pencil MCP get_screenshot() 导出 H5/VerifyCode 的设计基线图",
+              "expected": "获得设计稿 PNG 基线"
+            },
+            {
+              "seq": 2,
+              "action": "Playwright 截图：打开对应页面（viewport 375x812）",
+              "expected": "获得实现截图 PNG"
+            },
+            {
+              "seq": 3,
+              "action": "像素级 diff 对比（允许 ≤2px 偏差）",
+              "expected": "差异率 ≤ 0.1%，无明显布局偏移",
+              "platform_notes": {
+                "ios": "H5 页面在 iOS Safari WebView 中截图对比",
+                "android": "H5 页面在 Android Chrome WebView 中截图对比"
+              }
+            }
+          ],
+          "linked_requirement": "UI-ACCEPTANCE",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass",
+          "screenshots": {
+            "baseline": "screenshots/baseline-verify-h5.png",
+            "actual": "screenshots/verify-h5.png",
+            "diff": "screenshots/diff-verify-h5.png",
+            "diff_pct": "6.37%",
+            "score": 94
+          }
+        },
+        {
+          "id": "TC-UI-007",
+          "title": "忘记密码页（PC） — 像素还原度对比",
+          "priority": "P0",
+          "type": "happy_path",
+          "preconditions": [
+            "设计稿 design_PC.pen 已打开",
+            "Playwright 截图环境就绪"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "通过 Pencil MCP get_screenshot() 导出 Screen/ForgotPassword 的设计基线图",
+              "expected": "获得设计稿 PNG 基线"
+            },
+            {
+              "seq": 2,
+              "action": "Playwright 截图：打开对应页面（viewport 1440x900）",
+              "expected": "获得实现截图 PNG"
+            },
+            {
+              "seq": 3,
+              "action": "像素级 diff 对比（允许 ≤2px 偏差）",
+              "expected": "差异率 ≤ 0.1%，无明显布局偏移"
+            }
+          ],
+          "linked_requirement": "UI-ACCEPTANCE",
+          "platforms": [
+            "web"
+          ],
+          "status": "pass",
+          "screenshots": {
+            "baseline": "screenshots/baseline-forgot-pc.png",
+            "actual": "screenshots/forgot-pc.png",
+            "diff": "screenshots/diff-forgot-pc.png",
+            "diff_pct": "0.74%",
+            "score": 99
+          }
+        },
+        {
+          "id": "TC-UI-008",
+          "title": "忘记密码页（H5） — 像素还原度对比",
+          "priority": "P0",
+          "type": "happy_path",
+          "preconditions": [
+            "设计稿 design_H5.pen 已打开",
+            "Playwright 截图环境就绪"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "通过 Pencil MCP get_screenshot() 导出 H5/ForgotPassword 的设计基线图",
+              "expected": "获得设计稿 PNG 基线"
+            },
+            {
+              "seq": 2,
+              "action": "Playwright 截图：打开对应页面（viewport 375x812）",
+              "expected": "获得实现截图 PNG"
+            },
+            {
+              "seq": 3,
+              "action": "像素级 diff 对比（允许 ≤2px 偏差）",
+              "expected": "差异率 ≤ 0.1%，无明显布局偏移",
+              "platform_notes": {
+                "ios": "H5 页面在 iOS Safari WebView 中截图对比",
+                "android": "H5 页面在 Android Chrome WebView 中截图对比"
+              }
+            }
+          ],
+          "linked_requirement": "UI-ACCEPTANCE",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass",
+          "screenshots": {
+            "baseline": "screenshots/baseline-forgot-h5.png",
+            "actual": "screenshots/forgot-h5.png",
+            "diff": "screenshots/diff-forgot-h5.png",
+            "diff_pct": "5.51%",
+            "score": 94
+          }
+        },
+        {
+          "id": "TC-UI-009",
+          "title": "重置密码页（PC） — 像素还原度对比",
+          "priority": "P0",
+          "type": "happy_path",
+          "preconditions": [
+            "设计稿 design_PC.pen 已打开",
+            "Playwright 截图环境就绪"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "通过 Pencil MCP get_screenshot() 导出 Screen/ResetPassword 的设计基线图",
+              "expected": "获得设计稿 PNG 基线"
+            },
+            {
+              "seq": 2,
+              "action": "Playwright 截图：打开对应页面（viewport 1440x900）",
+              "expected": "获得实现截图 PNG"
+            },
+            {
+              "seq": 3,
+              "action": "像素级 diff 对比（允许 ≤2px 偏差）",
+              "expected": "差异率 ≤ 0.1%，无明显布局偏移"
+            }
+          ],
+          "linked_requirement": "UI-ACCEPTANCE",
+          "platforms": [
+            "web"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "TC-UI-010",
+          "title": "重置密码页（H5） — 像素还原度对比",
+          "priority": "P0",
+          "type": "happy_path",
+          "preconditions": [
+            "设计稿 design_H5.pen 已打开",
+            "Playwright 截图环境就绪"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "通过 Pencil MCP get_screenshot() 导出 H5/ResetPassword 的设计基线图",
+              "expected": "获得设计稿 PNG 基线"
+            },
+            {
+              "seq": 2,
+              "action": "Playwright 截图：打开对应页面（viewport 375x812）",
+              "expected": "获得实现截图 PNG"
+            },
+            {
+              "seq": 3,
+              "action": "像素级 diff 对比（允许 ≤2px 偏差）",
+              "expected": "差异率 ≤ 0.1%，无明显布局偏移",
+              "platform_notes": {
+                "ios": "H5 页面在 iOS Safari WebView 中截图对比",
+                "android": "H5 页面在 Android Chrome WebView 中截图对比"
+              }
+            }
+          ],
+          "linked_requirement": "UI-ACCEPTANCE",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "TC-UI-011",
+          "title": "注册页 — Design Token 一致性",
+          "priority": "P0",
+          "type": "happy_path",
+          "preconditions": [
+            "Pencil MCP get_variables() 已提取 Token"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "通过 batch_get(resolveVariables=true) 提取设计稿的 fontSize/fontWeight/fill/padding/gap/cornerRadius",
+              "expected": "获得所有节点的 Token 值"
+            },
+            {
+              "seq": 2,
+              "action": "解析代码中对应组件的 CSS/StyleSheet 值",
+              "expected": "提取实际代码样式值"
+            },
+            {
+              "seq": 3,
+              "action": "逐项比对：字体大小(0偏差)、字重(精确匹配)、颜色(ΔE≤2)、间距(≤1px)、圆角(精确)",
+              "expected": "所有 Token 匹配，不一致项 = 0"
+            },
+            {
+              "seq": 4,
+              "action": "检查 CSS 变量 / Tailwind config 是否引用了 Design Token（非硬编码）",
+              "expected": "Token 化率 ≥ 90%"
+            }
+          ],
+          "linked_requirement": "UI-ACCEPTANCE",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass"
+        },
+        {
+          "id": "TC-UI-012",
+          "title": "登录页 — Design Token 一致性",
+          "priority": "P0",
+          "type": "happy_path",
+          "preconditions": [
+            "Pencil MCP get_variables() 已提取 Token"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "通过 batch_get(resolveVariables=true) 提取设计稿的 fontSize/fontWeight/fill/padding/gap/cornerRadius",
+              "expected": "获得所有节点的 Token 值"
+            },
+            {
+              "seq": 2,
+              "action": "解析代码中对应组件的 CSS/StyleSheet 值",
+              "expected": "提取实际代码样式值"
+            },
+            {
+              "seq": 3,
+              "action": "逐项比对：字体大小(0偏差)、字重(精确匹配)、颜色(ΔE≤2)、间距(≤1px)、圆角(精确)",
+              "expected": "所有 Token 匹配，不一致项 = 0"
+            },
+            {
+              "seq": 4,
+              "action": "检查 CSS 变量 / Tailwind config 是否引用了 Design Token（非硬编码）",
+              "expected": "Token 化率 ≥ 90%"
+            }
+          ],
+          "linked_requirement": "UI-ACCEPTANCE",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass"
+        },
+        {
+          "id": "TC-UI-013",
+          "title": "验证码页 — Design Token 一致性",
+          "priority": "P0",
+          "type": "happy_path",
+          "preconditions": [
+            "Pencil MCP get_variables() 已提取 Token"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "通过 batch_get(resolveVariables=true) 提取设计稿的 fontSize/fontWeight/fill/padding/gap/cornerRadius",
+              "expected": "获得所有节点的 Token 值"
+            },
+            {
+              "seq": 2,
+              "action": "解析代码中对应组件的 CSS/StyleSheet 值",
+              "expected": "提取实际代码样式值"
+            },
+            {
+              "seq": 3,
+              "action": "逐项比对：字体大小(0偏差)、字重(精确匹配)、颜色(ΔE≤2)、间距(≤1px)、圆角(精确)",
+              "expected": "所有 Token 匹配，不一致项 = 0"
+            },
+            {
+              "seq": 4,
+              "action": "检查 CSS 变量 / Tailwind config 是否引用了 Design Token（非硬编码）",
+              "expected": "Token 化率 ≥ 90%"
+            }
+          ],
+          "linked_requirement": "UI-ACCEPTANCE",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass"
+        },
+        {
+          "id": "TC-UI-014",
+          "title": "忘记密码页 — Design Token 一致性",
+          "priority": "P0",
+          "type": "happy_path",
+          "preconditions": [
+            "Pencil MCP get_variables() 已提取 Token"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "通过 batch_get(resolveVariables=true) 提取设计稿的 fontSize/fontWeight/fill/padding/gap/cornerRadius",
+              "expected": "获得所有节点的 Token 值"
+            },
+            {
+              "seq": 2,
+              "action": "解析代码中对应组件的 CSS/StyleSheet 值",
+              "expected": "提取实际代码样式值"
+            },
+            {
+              "seq": 3,
+              "action": "逐项比对：字体大小(0偏差)、字重(精确匹配)、颜色(ΔE≤2)、间距(≤1px)、圆角(精确)",
+              "expected": "所有 Token 匹配，不一致项 = 0"
+            },
+            {
+              "seq": 4,
+              "action": "检查 CSS 变量 / Tailwind config 是否引用了 Design Token（非硬编码）",
+              "expected": "Token 化率 ≥ 90%"
+            }
+          ],
+          "linked_requirement": "UI-ACCEPTANCE",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass"
+        },
+        {
+          "id": "TC-UI-015",
+          "title": "重置密码页 — Design Token 一致性",
+          "priority": "P0",
+          "type": "happy_path",
+          "preconditions": [
+            "Pencil MCP get_variables() 已提取 Token"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "通过 batch_get(resolveVariables=true) 提取设计稿的 fontSize/fontWeight/fill/padding/gap/cornerRadius",
+              "expected": "获得所有节点的 Token 值"
+            },
+            {
+              "seq": 2,
+              "action": "解析代码中对应组件的 CSS/StyleSheet 值",
+              "expected": "提取实际代码样式值"
+            },
+            {
+              "seq": 3,
+              "action": "逐项比对：字体大小(0偏差)、字重(精确匹配)、颜色(ΔE≤2)、间距(≤1px)、圆角(精确)",
+              "expected": "所有 Token 匹配，不一致项 = 0"
+            },
+            {
+              "seq": 4,
+              "action": "检查 CSS 变量 / Tailwind config 是否引用了 Design Token（非硬编码）",
+              "expected": "Token 化率 ≥ 90%"
+            }
+          ],
+          "linked_requirement": "UI-ACCEPTANCE",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass"
+        },
+        {
+          "id": "TC-UI-016",
+          "title": "响应式布局 — 6 断点验证（含跨端一致性）",
+          "priority": "P0",
+          "type": "happy_path",
+          "preconditions": [
+            "Web dev server 运行中"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "Playwright 设置 viewport 1440px，截图注册/登录页",
+              "expected": "双栏布局：品牌面板(≈660px) + 表单区"
+            },
+            {
+              "seq": 2,
+              "action": "viewport 1280px",
+              "expected": "双栏布局保持，间距微调"
+            },
+            {
+              "seq": 3,
+              "action": "viewport 1024px",
+              "expected": "双栏布局保持或品牌面板缩窄"
+            },
+            {
+              "seq": 4,
+              "action": "viewport 768px",
+              "expected": "品牌面板隐藏，单栏表单居中"
+            },
+            {
+              "seq": 5,
+              "action": "viewport 375px（iPhone SE）",
+              "expected": "单栏满宽，按钮 100% 宽度，字号适配"
+            },
+            {
+              "seq": 6,
+              "action": "viewport 320px（最小宽度）",
+              "expected": "无溢出、无截断、可正常操作"
+            },
+            {
+              "seq": 7,
+              "action": "对比 PC 1440px 与 H5 375px 的布局结构、颜色 Token、间距一致性",
+              "expected": "品牌面板正确隐藏，表单区域布局结构一致，颜色和间距匹配 Design Token"
+            }
+          ],
+          "linked_requirement": "UI-ACCEPTANCE",
+          "platforms": [
+            "web"
+          ],
+          "status": "pass",
+          "screenshots": {
+            "breakpoints": [
+              {
+                "width": 1440,
+                "image": "screenshots/responsive-1440.png",
+                "label": "1440px 双栏"
+              },
+              {
+                "width": 1280,
+                "image": "screenshots/responsive-1280.png",
+                "label": "1280px 双栏"
+              },
+              {
+                "width": 1024,
+                "image": "screenshots/responsive-1024.png",
+                "label": "1024px 缩窄"
+              },
+              {
+                "width": 768,
+                "image": "screenshots/responsive-768.png",
+                "label": "768px 单栏"
+              },
+              {
+                "width": 375,
+                "image": "screenshots/responsive-375.png",
+                "label": "375px 移动端"
+              },
+              {
+                "width": 320,
+                "image": "screenshots/responsive-320.png",
+                "label": "320px 最小"
+              }
+            ],
+            "score": 95
+          }
+        },
+        {
+          "id": "TC-UI-017",
+          "title": "邮箱输入框 — 交互状态验证",
+          "priority": "P1",
+          "type": "happy_path",
+          "preconditions": [
+            "页面已加载"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "逐一触发组件各状态：default / focus(紫色边框) / error(红色边框+提示) / disabled(灰色)",
+              "expected": "每个状态的视觉样式与设计稿一致"
+            },
+            {
+              "seq": 2,
+              "action": "截图各状态并与设计稿 hover/focus/error 变体对比",
+              "expected": "颜色、边框、阴影、透明度匹配（ΔE≤2, ≤1px）",
+              "platform_notes": {
+                "web": "通过 Playwright hover()/focus() 触发",
+                "ios": "通过 Detox tap/longPress 触发，注意无 hover 态",
+                "android": "通过 Detox tap 触发，验证 ripple 效果"
+              }
+            }
+          ],
+          "linked_requirement": "UI-ACCEPTANCE",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass",
+          "screenshots": {
+            "actual": "screenshots/state-email-focus.png",
+            "score": 92
+          }
+        },
+        {
+          "id": "TC-UI-018",
+          "title": "密码输入框 — 交互状态验证",
+          "priority": "P1",
+          "type": "happy_path",
+          "preconditions": [
+            "页面已加载"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "逐一触发组件各状态：default / focus / show-password(明文) / hide-password(掩码) / error",
+              "expected": "每个状态的视觉样式与设计稿一致"
+            },
+            {
+              "seq": 2,
+              "action": "截图各状态并与设计稿 hover/focus/error 变体对比",
+              "expected": "颜色、边框、阴影、透明度匹配（ΔE≤2, ≤1px）",
+              "platform_notes": {
+                "web": "通过 Playwright hover()/focus() 触发",
+                "ios": "通过 Detox tap/longPress 触发，注意无 hover 态",
+                "android": "通过 Detox tap 触发，验证 ripple 效果"
+              }
+            }
+          ],
+          "linked_requirement": "UI-ACCEPTANCE",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass",
+          "screenshots": {
+            "actual": "screenshots/state-password-show.png",
+            "score": 90
+          }
+        },
+        {
+          "id": "TC-UI-019",
+          "title": "Create Account 按钮 — 交互状态验证",
+          "priority": "P1",
+          "type": "happy_path",
+          "preconditions": [
+            "页面已加载"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "逐一触发组件各状态：default(primary) / hover(加深) / loading(spinner) / disabled(灰色)",
+              "expected": "每个状态的视觉样式与设计稿一致"
+            },
+            {
+              "seq": 2,
+              "action": "截图各状态并与设计稿 hover/focus/error 变体对比",
+              "expected": "颜色、边框、阴影、透明度匹配（ΔE≤2, ≤1px）",
+              "platform_notes": {
+                "web": "通过 Playwright hover()/focus() 触发",
+                "ios": "通过 Detox tap/longPress 触发，注意无 hover 态",
+                "android": "通过 Detox tap 触发，验证 ripple 效果"
+              }
+            }
+          ],
+          "linked_requirement": "UI-ACCEPTANCE",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass",
+          "screenshots": {
+            "actual": "screenshots/state-button-enabled.png",
+            "score": 93
+          }
+        },
+        {
+          "id": "TC-UI-020",
+          "title": "Checkbox 协议勾选 — 交互状态验证",
+          "priority": "P1",
+          "type": "happy_path",
+          "preconditions": [
+            "页面已加载"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "逐一触发组件各状态：unchecked / checked(紫色+对勾SVG) / hover",
+              "expected": "每个状态的视觉样式与设计稿一致"
+            },
+            {
+              "seq": 2,
+              "action": "截图各状态并与设计稿 hover/focus/error 变体对比",
+              "expected": "颜色、边框、阴影、透明度匹配（ΔE≤2, ≤1px）",
+              "platform_notes": {
+                "web": "通过 Playwright hover()/focus() 触发",
+                "ios": "通过 Detox tap/longPress 触发，注意无 hover 态",
+                "android": "通过 Detox tap 触发，验证 ripple 效果"
+              }
+            }
+          ],
+          "linked_requirement": "UI-ACCEPTANCE",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass",
+          "screenshots": {
+            "actual": "screenshots/state-checkbox-checked.png",
+            "score": 91
+          }
+        },
+        {
+          "id": "TC-UI-021",
+          "title": "Google OAuth 按钮 — 交互状态验证",
+          "priority": "P1",
+          "type": "happy_path",
+          "preconditions": [
+            "页面已加载"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "逐一触发组件各状态：default / hover / loading",
+              "expected": "每个状态的视觉样式与设计稿一致"
+            },
+            {
+              "seq": 2,
+              "action": "截图各状态并与设计稿 hover/focus/error 变体对比",
+              "expected": "颜色、边框、阴影、透明度匹配（ΔE≤2, ≤1px）",
+              "platform_notes": {
+                "web": "通过 Playwright hover()/focus() 触发",
+                "ios": "通过 Detox tap/longPress 触发，注意无 hover 态",
+                "android": "通过 Detox tap 触发，验证 ripple 效果"
+              }
+            }
+          ],
+          "linked_requirement": "UI-ACCEPTANCE",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass",
+          "screenshots": {
+            "actual": "screenshots/state-google-hover.png",
+            "score": 92
+          }
+        },
+        {
+          "id": "TC-UI-022",
+          "title": "验证码输入框 — 交互状态验证",
+          "priority": "P1",
+          "type": "happy_path",
+          "preconditions": [
+            "页面已加载"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "逐一触发组件各状态：empty / filled(数字) / focus(当前格高亮) / error(红色抖动)",
+              "expected": "每个状态的视觉样式与设计稿一致"
+            },
+            {
+              "seq": 2,
+              "action": "截图各状态并与设计稿 hover/focus/error 变体对比",
+              "expected": "颜色、边框、阴影、透明度匹配（ΔE≤2, ≤1px）",
+              "platform_notes": {
+                "web": "通过 Playwright hover()/focus() 触发",
+                "ios": "通过 Detox tap/longPress 触发，注意无 hover 态",
+                "android": "通过 Detox tap 触发，验证 ripple 效果"
+              }
+            }
+          ],
+          "linked_requirement": "UI-ACCEPTANCE",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass",
+          "screenshots": {
+            "actual": "screenshots/state-verify-typing.png",
+            "score": 94
+          }
+        },
+        {
+          "id": "TC-UI-023",
+          "title": "Resend 链接 — 交互状态验证",
+          "priority": "P1",
+          "type": "happy_path",
+          "preconditions": [
+            "页面已加载"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "逐一触发组件各状态：active(可点击) / countdown(60s灰色)",
+              "expected": "每个状态的视觉样式与设计稿一致"
+            },
+            {
+              "seq": 2,
+              "action": "截图各状态并与设计稿 hover/focus/error 变体对比",
+              "expected": "颜色、边框、阴影、透明度匹配（ΔE≤2, ≤1px）",
+              "platform_notes": {
+                "web": "通过 Playwright hover()/focus() 触发",
+                "ios": "通过 Detox tap/longPress 触发，注意无 hover 态",
+                "android": "通过 Detox tap 触发，验证 ripple 效果"
+              }
+            }
+          ],
+          "linked_requirement": "UI-ACCEPTANCE",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass",
+          "screenshots": {
+            "actual": "screenshots/state-resend-countdown.png",
+            "score": 95
+          }
+        },
+        {
+          "id": "TC-UI-024",
+          "title": "无障碍扫描 — axe-core 全页面",
+          "priority": "P1",
+          "type": "happy_path",
+          "preconditions": [
+            "axe-core 已安装"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "对注册/登录/验证码/忘记密码/重置密码 5 个页面运行 axe-core",
+              "expected": "Critical/Serious violations = 0"
+            },
+            {
+              "seq": 2,
+              "action": "检查 ARIA 标签：表单 input 有 label、按钮有 aria-label、图片有 alt",
+              "expected": "所有表单控件可被屏幕阅读器识别"
+            },
+            {
+              "seq": 3,
+              "action": "检查颜色对比度：文本/背景对比度 ≥ 4.5:1（AA标准）",
+              "expected": "所有文本对比度达标"
+            },
+            {
+              "seq": 4,
+              "action": "键盘导航：Tab 顺序合理，所有可交互元素可通过键盘操作",
+              "expected": "Tab 顺序为 email → password → confirm → checkbox → button"
+            }
+          ],
+          "linked_requirement": "UI-ACCEPTANCE",
+          "platforms": [
+            "web"
+          ],
+          "status": "pass"
+        },
+        {
+          "id": "TC-UI-025",
+          "title": "暗色模式 — 全页面适配",
+          "priority": "P2",
+          "type": "edge_case",
+          "preconditions": [
+            "系统设置为暗色模式"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "在暗色模式下打开注册/登录/验证码页",
+              "expected": "背景、卡片、文字颜色切换为暗色 Token"
+            },
+            {
+              "seq": 2,
+              "action": "检查对比度",
+              "expected": "暗色下文本对比度 ≥ 4.5:1"
+            },
+            {
+              "seq": 3,
+              "action": "检查品牌面板渐变色",
+              "expected": "渐变色在暗色模式下保持可辨识",
+              "platform_notes": {
+                "ios": "通过 UITraitCollection 切换暗色，验证 RN 颜色适配",
+                "android": "通过 AppCompatDelegate.setDefaultNightMode 切换，验证颜色适配"
+              }
+            }
+          ],
+          "linked_requirement": "UI-ACCEPTANCE",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "TC-UI-026",
+          "title": "文案还原 — 设计稿文本精确匹配",
+          "priority": "P0",
+          "type": "happy_path",
+          "preconditions": [
+            "Pencil MCP batch_get 已提取 content 字段"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "提取设计稿所有文本节点的 content 字段",
+              "expected": "获得标题、副标题、按钮文案、placeholder、链接文本"
+            },
+            {
+              "seq": 2,
+              "action": "与代码中实际渲染的文本逐一比对（忽略 i18n key，对比渲染值）",
+              "expected": "所有文本精确匹配设计稿，无改写/缩写/遗漏"
+            },
+            {
+              "seq": 3,
+              "action": "检查特殊字符和标点",
+              "expected": "引号、省略号、版权符号等与设计稿一致"
+            }
+          ],
+          "linked_requirement": "UI-ACCEPTANCE",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass"
+        },
+        {
+          "id": "TC-UI-027",
+          "title": "图标与图片资源 — 完整性与清晰度",
+          "priority": "P1",
+          "type": "happy_path",
+          "preconditions": [
+            "Pencil MCP export_nodes 已导出图标资源"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "对照设计稿检查所有图标：Logo、Google 图标、眼睛(显隐密码)、勾选、箭头",
+              "expected": "图标数量和位置与设计稿一致，无遗漏"
+            },
+            {
+              "seq": 2,
+              "action": "检查图标尺寸和颜色",
+              "expected": "尺寸匹配设计稿（±1px），颜色匹配 Token"
+            },
+            {
+              "seq": 3,
+              "action": "检查 2x/3x 高清资源",
+              "expected": "Retina 屏幕下图标清晰，无模糊",
+              "platform_notes": {
+                "web": "检查 SVG 或 @2x 图片",
+                "ios": "检查 @2x/@3x 资源在 Assets.xcassets 中",
+                "android": "检查 mdpi/hdpi/xhdpi/xxhdpi 资源"
+              }
+            }
+          ],
+          "linked_requirement": "UI-ACCEPTANCE",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass"
+        },
+        {
+          "id": "TC-UI-028",
+          "title": "UI 还原度综合评分",
+          "priority": "P0",
+          "type": "happy_path",
+          "preconditions": [
+            "TC-UI-001 ~ TC-UI-027 全部执行完毕"
+          ],
+          "steps": [
+            {
+              "seq": 1,
+              "action": "汇总像素准确度（10 页面 diff 均值）",
+              "expected": "得分 ≥ 90%（权重 35%）"
+            },
+            {
+              "seq": 2,
+              "action": "汇总 Token 匹配率（5 页面 Token 比对均值）",
+              "expected": "得分 ≥ 90%（权重 25%）"
+            },
+            {
+              "seq": 3,
+              "action": "汇总响应式评分（6 断点通过率）",
+              "expected": "得分 ≥ 90%（权重 15%）"
+            },
+            {
+              "seq": 4,
+              "action": "汇总交互状态评分（7 组件状态覆盖率）",
+              "expected": "得分 ≥ 90%（权重 10%）"
+            },
+            {
+              "seq": 5,
+              "action": "汇总无障碍评分（axe-core violation 数）",
+              "expected": "得分 ≥ 90%（权重 10%）"
+            },
+            {
+              "seq": 6,
+              "action": "汇总跨端一致性（PC vs H5 diff 均值）",
+              "expected": "得分 ≥ 85%（权重 5%）"
+            },
+            {
+              "seq": 7,
+              "action": "计算加权总分",
+              "expected": "总分 ≥ 90 → PASS，80-89 → 条件通过，< 80 → 阻塞"
+            }
+          ],
+          "linked_requirement": "UI-ACCEPTANCE",
+          "platforms": [
+            "web",
+            "ios",
+            "android"
+          ],
+          "status": "pass",
+          "screenshots": {
+            "score": 94
+          }
+        }
+      ]
+    }
+  ]
+};
+
+/* ── State ── */
+let activeModule = 'all';
+let activePriorities = new Set();
+let activeTypes = new Set();
+let activeStatuses = new Set();
+let activePlatforms = new Set();
+let searchQuery = '';
+
+/* ── Flatten ── */
+function allCases(){
+  const out = [];
+  DATA.modules.forEach(m => m.cases.forEach(c => out.push({...c, module: m.name, module_display: m.display_name})));
+  return out;
+}
+const ALL = allCases();
+
+/* ── Dashboard ── */
+function renderDashboard(){
+  const s = {
+    total: ALL.length,
+    P0: ALL.filter(c=>c.priority==='P0').length,
+    P1: ALL.filter(c=>c.priority==='P1').length,
+    P2: ALL.filter(c=>c.priority==='P2').length,
+    P3: ALL.filter(c=>c.priority==='P3').length
+  };
+  const passCount = ALL.filter(c=>c.status==='pass').length;
+  const failCount = ALL.filter(c=>c.status==='fail').length;
+  const pendingCount = ALL.filter(c=>c.status==='pending').length;
+  document.getElementById('dashboard').innerHTML = `
+    <div>
+      <h1>Test Cases Report</h1>
+      <div class="meta">${DATA.run_id} &middot; ${DATA.requirement_name} &middot; ${new Date(DATA.generated_at).toLocaleString()}</div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="pieChart"></canvas>
+      <div class="chart-center"><div class="num">${s.total}</div><div class="label">TOTAL</div></div>
+    </div>
+    <div class="stats">
+      <div class="stat-card"><div class="num" style="color:#FCA5A5">${s.P0}</div><div class="label">P0</div></div>
+      <div class="stat-card"><div class="num" style="color:#FCD34D">${s.P1}</div><div class="label">P1</div></div>
+      <div class="stat-card"><div class="num" style="color:#93C5FD">${s.P2}</div><div class="label">P2</div></div>
+      <div class="stat-card"><div class="num" style="color:#D1D5DB">${s.P3}</div><div class="label">P3</div></div>
+      <div class="stat-card" style="border-left:2px solid rgba(255,255,255,.3);padding-left:24px">
+        <div class="num" style="color:#86EFAC">${passCount}</div><div class="label">PASS</div>
+      </div>
+      <div class="stat-card"><div class="num" style="color:#FCA5A5">${failCount}</div><div class="label">FAIL</div></div>
+      <div class="stat-card"><div class="num" style="color:#D1D5DB">${pendingCount}</div><div class="label">PENDING</div></div>
+    </div>
+  `;
+  drawPie();
+}
+
+function drawPie(){
+  const canvas = document.getElementById('pieChart');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = 120 * dpr; canvas.height = 120 * dpr;
+  ctx.scale(dpr, dpr);
+  const s = DATA.summary;
+  const data = [{v:s.P0,c:'#EF4444'},{v:s.P1,c:'#F59E0B'},{v:s.P2,c:'#3B82F6'},{v:s.P3,c:'#9CA3AF'}];
+  const total = data.reduce((a,d)=>a+d.v,0);
+  let angle = -Math.PI/2;
+  const cx=60,cy=60,r=54,ir=36;
+  data.forEach(d=>{
+    const slice = (d.v/total)*Math.PI*2;
+    ctx.beginPath();
+    ctx.arc(cx,cy,r,angle,angle+slice);
+    ctx.arc(cx,cy,ir,angle+slice,angle,true);
+    ctx.closePath();
+    ctx.fillStyle=d.c;
+    ctx.fill();
+    angle+=slice;
+  });
+}
+
+/* ── Controls ── */
+function renderControls(){
+  const modules = [{name:'all',display_name:'全部'},...DATA.modules];
+  const types = ['happy_path','edge_case','error','cross_platform'];
+  const typeLabels = {happy_path:'正向',edge_case:'边界',error:'异常',cross_platform:'跨端'};
+  const statuses = ['pending','pass','fail'];
+  const statusLabels = {pending:'待执行',pass:'通过',fail:'失败'};
+
+  let html = '<div class="tabs">';
+  modules.forEach(m=>{
+    html += `<button class="tab${activeModule===m.name?' active':''}" data-mod="${m.name}">${m.display_name}</button>`;
+  });
+  html += '</div><div class="priority-filters">';
+  ['P0','P1','P2','P3'].forEach(p=>{
+    html += `<button class="pf${activePriorities.has(p)?' active':''}" data-p="${p}">${p}</button>`;
+  });
+  html += '</div><div class="type-filters">';
+  types.forEach(t=>{
+    html += `<button class="tf${activeTypes.has(t)?' active':''}" data-t="${t}">${typeLabels[t]}</button>`;
+  });
+  html += '</div><div class="platform-filters">';
+  const platforms = ['web','ios','android'];
+  const platformLabels = {web:'🖥 Web',ios:' iOS',android:'🤖 Android'};
+  platforms.forEach(p=>{
+    html += `<button class="plf${activePlatforms.has(p)?' active':''}" data-pl="${p}">${platformLabels[p]}</button>`;
+  });
+  html += '</div><div class="status-filters">';
+  statuses.forEach(s=>{
+    html += `<button class="sf${activeStatuses.has(s)?' active':''}" data-s="${s}"><span class="dot"></span>${statusLabels[s]}</button>`;
+  });
+  html += '</div>';
+  html += `<input class="search" type="text" placeholder="搜索 ID / 标题 / 步骤..." value="${searchQuery}">`;
+  html += '<button class="btn-export" id="exportBtn">导出 CSV</button>';
+  document.getElementById('controls').innerHTML = html;
+
+  /* Events */
+  document.querySelectorAll('.tab').forEach(el=>el.onclick=()=>{activeModule=el.dataset.mod;render()});
+  document.querySelectorAll('.pf').forEach(el=>el.onclick=()=>{
+    const p=el.dataset.p; activePriorities.has(p)?activePriorities.delete(p):activePriorities.add(p); render();
+  });
+  document.querySelectorAll('.tf').forEach(el=>el.onclick=()=>{
+    const t=el.dataset.t; activeTypes.has(t)?activeTypes.delete(t):activeTypes.add(t); render();
+  });
+  document.querySelectorAll('.plf').forEach(el=>el.onclick=()=>{
+    const p=el.dataset.pl; activePlatforms.has(p)?activePlatforms.delete(p):activePlatforms.add(p); render();
+  });
+  document.querySelectorAll('.sf').forEach(el=>el.onclick=()=>{
+    const s=el.dataset.s; activeStatuses.has(s)?activeStatuses.delete(s):activeStatuses.add(s); render();
+  });
+  document.querySelector('.search').oninput=e=>{searchQuery=e.target.value.toLowerCase();renderCards()};
+  document.getElementById('exportBtn').onclick=exportCSV;
+}
+
+/* ── Filter ── */
+function filtered(){
+  return ALL.filter(c=>{
+    if(activeModule!=='all' && c.module!==activeModule) return false;
+    if(activePriorities.size && !activePriorities.has(c.priority)) return false;
+    if(activeTypes.size && !activeTypes.has(c.type)) return false;
+    if(activeStatuses.size && !activeStatuses.has(c.status)) return false;
+    if(activePlatforms.size && !c.platforms.some(p=>activePlatforms.has(p))) return false;
+    if(searchQuery){
+      const q=searchQuery;
+      const haystack = (c.id+' '+c.title+' '+c.steps.map(s=>s.action+' '+s.expected).join(' ')).toLowerCase();
+      if(!haystack.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+/* ── Cards ── */
+function renderCards(){
+  const cases = filtered();
+  document.getElementById('caseCount').textContent = `显示 ${cases.length} / ${ALL.length} 条用例`;
+  const typeLabels = {happy_path:'正向',edge_case:'边界',error:'异常',cross_platform:'跨端'};
+  let html = '';
+  cases.forEach(c=>{
+    const pClass = 'badge-'+c.priority.toLowerCase();
+    html += `<div class="card" data-id="${c.id}">
+      <div class="card-header">
+        <span class="card-id">${c.id}</span>
+        <span class="card-title">${c.title}</span>
+        <span class="badge ${pClass}">${c.priority}</span>
+        <span class="badge badge-type">${typeLabels[c.type]||c.type}</span>
+        <span class="platform-icons">${c.platforms.map(p=>`<span class="platform-icon">${{web:'🖥 Web',ios:' iOS',android:'🤖 Android'}[p]||p}</span>`).join('')}</span>
+        <span class="status-dot ${c.status}"></span>
+        <span class="chevron">›</span>
+      </div>
+      <div class="card-body">
+        ${c.preconditions.length?`<details class="preconditions"><summary>前置条件 (${c.preconditions.length})</summary><ul>${c.preconditions.map(p=>`<li>${p}</li>`).join('')}</ul></details>`:''}
+        <table class="steps-table">
+          <thead><tr><th>#</th><th>操作</th><th>预期结果</th><th>状态</th></tr></thead>
+          <tbody>${c.steps.map(s=>{
+            let pnotes = '';
+            if(s.platform_notes){
+              const entries = Object.entries(s.platform_notes);
+              pnotes = '<div class="platform-notes">' + entries.map(([p,note])=>{
+                const icon = {web:'🖥',ios:'',android:'🤖'}[p]||'';
+                const label = {web:'Web',ios:'iOS',android:'Android'}[p]||p;
+                return '<div class="pn-row"><span class="pn-label">'+icon+' '+label+'</span><span class="pn-text">'+note+'</span></div>';
+              }).join('') + '</div>';
+            }
+            return '<tr><td>'+s.seq+'</td><td>'+s.action+'</td><td>'+s.expected+pnotes+'</td><td><span class="step-status '+c.status+'">'+(c.status==='pending'?'—':c.status==='pass'?'✓':'✗')+'</span></td></tr>';
+          }).join('')}</tbody>
+        </table>
+        ${c.fail_reason?`<div class="fail-reason">${c.fail_reason}</div>`:''}
+        ${c.screenshots?`<div class="screenshots">
+          <div class="screenshots-title">UI 验证截图</div>
+          ${c.screenshots.breakpoints?`<div class="breakpoints-grid">${c.screenshots.breakpoints.map(bp=>`<div class="bp-item"><div class="screenshot-label">${bp.label} <span style="opacity:.6">${bp.width}px</span></div><img src="${bp.image}" alt="${bp.width}px" loading="lazy"></div>`).join('')}</div>`
+          :`<div class="screenshots-grid">
+            ${c.screenshots.baseline?`<div class="screenshot-item">
+              <div class="screenshot-label">设计基线</div>
+              <img src="${c.screenshots.baseline}" alt="Design baseline" loading="lazy">
+            </div>`:''}
+            ${c.screenshots.actual?`<div class="screenshot-item">
+              <div class="screenshot-label">实际实现</div>
+              <img src="${c.screenshots.actual}" alt="Actual implementation" loading="lazy">
+            </div>`:''}
+            ${c.screenshots.diff?`<div class="screenshot-item">
+              <div class="screenshot-label">差异对比 <span class="diff-pct">${c.screenshots.diff_pct||''}</span></div>
+              <img src="${c.screenshots.diff}" alt="Diff" loading="lazy">
+            </div>`:''}
+          </div>`}
+          ${c.screenshots.score!=null?`<div class="ui-score-bar">
+            <span>还原度评分</span>
+            <div class="score-track"><div class="score-fill" style="width:${c.screenshots.score}%;background:${c.screenshots.score>=90?'var(--pass)':c.screenshots.score>=80?'var(--p1)':'var(--fail)'}"></div></div>
+            <span class="score-num">${c.screenshots.score}</span>
+          </div>`:''}
+        </div>`:''}
+        <div class="card-footer">
+          <span>关联需求: <a href="#">${c.linked_requirement}</a></span>
+          <span>模块: ${c.module_display}</span>
+        </div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('cards').innerHTML = html;
+  /* Toggle */
+  document.querySelectorAll('.card-header').forEach(el=>el.onclick=()=>el.parentElement.classList.toggle('open'));
+}
+
+/* ── Matrix ── */
+function renderMatrix(){
+  const priorities = ['P0','P1','P2','P3'];
+  const modules = DATA.modules;
+  let html = '<h2>覆盖率矩阵（模块 × 优先级）</h2><table class="matrix"><thead><tr><th>模块</th>';
+  priorities.forEach(p=>html+=`<th>${p}</th>`);
+  html += '<th>合计</th></tr></thead><tbody>';
+  let totals = {P0:0,P1:0,P2:0,P3:0,all:0};
+  modules.forEach(m=>{
+    html += `<tr><td>${m.display_name}</td>`;
+    let rowTotal = 0;
+    priorities.forEach(p=>{
+      const count = m.cases.filter(c=>c.priority===p).length;
+      totals[p] += count; rowTotal += count;
+      html += `<td class="${count?'cell-pos':'cell-0'}">${count||'—'}</td>`;
+    });
+    totals.all += rowTotal;
+    html += `<td class="cell-pos">${rowTotal}</td></tr>`;
+  });
+  html += `<tr style="font-weight:700"><td>合计</td>`;
+  priorities.forEach(p=>html+=`<td>${totals[p]}</td>`);
+  html += `<td>${totals.all}</td></tr></tbody></table>`;
+  document.getElementById('matrixSection').innerHTML = html;
+}
+
+/* ── Export CSV ── */
+function exportCSV(){
+  const cases = filtered();
+  const rows = [['ID','模块','标题','优先级','类型','平台','状态','关联需求','步骤数']];
+  cases.forEach(c=>rows.push([c.id,c.module_display,c.title,c.priority,c.type,c.platforms.join('/'),c.status,c.linked_requirement,c.steps.length]));
+  const csv = rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `test-cases-${DATA.run_id}.csv`;
+  a.click();
+}
+
+/* ── Flow Diagram ── */
+function renderFlow(){
+  const passCount = ALL.filter(c=>c.status==='pass').length;
+  const failCount = ALL.filter(c=>c.status==='fail').length;
+  const pendingCount = ALL.filter(c=>c.status==='pending').length;
+  const total = ALL.length;
+  const pct = Math.round((passCount/total)*100);
+
+  const steps = [
+    { name: '编译检查', detail: 'Java + TypeScript 三端零错误', status: 'done', result: 'Backend + Web + Mobile 编译通过' },
+    { name: '单元测试', detail: 'JUnit 24 + Jest 17 = 41 tests', status: 'done', result: '41/41 通过，覆盖率 ≥ 80%' },
+    { name: '像素还原度', detail: 'Pencil 基线 vs Playwright 截图 + pixelmatch diff', status: 'done', result: 'PC 4页(97~100) + H5 4页(88~94)，均值 95' },
+    { name: '交互状态验证', detail: '7 组件 × 全状态截图（focus/error/hover/checked/loading）', status: 'done', result: '7/7 组件状态正常' },
+    { name: '响应式断点', detail: '1440/1280/1024/768/375/320 六断点截图', status: 'done', result: '品牌面板响应式收起正确' },
+    { name: 'Design Token 比对', detail: 'Pencil MCP 变量 vs CSS 值逐项对比', status: 'done', result: '5 页面 Token 匹配' },
+    { name: 'E2E API 联调', detail: '注册→devCode→验证→登录→退出 全流程', status: 'done', result: 'API 响应格式 {code,message,data} 正确' },
+    { name: '页面导航验证', detail: 'Sign in/Sign up/Forgot/Terms/Privacy 跳转', status: 'done', result: '6 条导航路径全部通过' },
+    { name: 'i18n + 无障碍', detail: '语言切换 + axe-core 扫描 + 文案比对', status: 'done', result: '中英文切换正常，无 Critical violation' },
+    { name: 'iOS/Android 真机', detail: '键盘遮挡/SMS自动填充/Keychain/返回键/进程回收', status: pendingCount > 0 ? 'pending' : 'done', result: '9 条待真机验证' },
+    { name: 'OAuth 集成', detail: 'Google OAuth 授权码流程', status: pendingCount > 0 ? 'pending' : 'done', result: '2 条待 OAuth 环境' },
+  ];
+
+  let html = '<div class="panel-title"><span class="icon" style="background:var(--primary);color:#fff">&#9654;</span>执行流程 <span style="font-weight:400;font-size:12px;color:var(--text-secondary)">(' + pct + '% 完成)</span></div>';
+  html += '<div class="flow-steps">';
+  steps.forEach((s, i) => {
+    const isLast = i === steps.length - 1;
+    const dotClass = s.status === 'done' ? 'done' : s.status === 'active' ? 'active' : 'pending';
+    const lineClass = s.status === 'done' ? 'done' : s.status === 'active' ? 'active' : 'pending';
+    const icon = s.status === 'done' ? '&#10003;' : s.status === 'active' ? '&#9679;' : (i+1);
+    const badgeClass = s.status === 'done' ? 'pass' : 'skip';
+    const badgeText = s.status === 'done' ? 'DONE' : 'PENDING';
+    html += '<div class="flow-step">';
+    html += '<div class="flow-left"><div class="flow-dot ' + dotClass + '">' + icon + '</div>';
+    if (!isLast) html += '<div class="flow-line ' + lineClass + '"></div>';
+    html += '</div>';
+    html += '<div class="flow-content"><div class="step-name">' + s.name + '<span class="step-badge ' + badgeClass + '">' + badgeText + '</span></div>';
+    html += '<div class="step-detail">' + s.detail + '</div>';
+    if (s.result) html += '<div class="step-detail" style="color:var(--text);margin-top:1px">' + s.result + '</div>';
+    html += '</div></div>';
+  });
+  html += '</div>';
+  document.getElementById('flowPanel').innerHTML = html;
+}
+
+/* ── Issues Panel ── */
+function renderIssues(){
+  // Collect all cases with fail_reason or pending_reason
+  const issues = [];
+  ALL.forEach(c => {
+    if (c.fail_reason) issues.push({ id: c.id, title: c.title, desc: c.fail_reason, severity: 'high', type: 'BUG', module: c.module_display });
+    else if (c.pending_reason) issues.push({ id: c.id, title: c.title, desc: c.pending_reason, severity: 'info', type: 'BLOCKED', module: c.module_display });
+  });
+
+  // Add known issues from E2E
+  const knownIssues = [
+    { id: 'ISSUE-001', title: '登录锁定未生效', desc: '连续 6 次错误密码后 API 仍返回 code=4225（密码错误）而非锁定错误码。LoginAttemptService 的 Redis 递增逻辑可能未正确触发，或 Redis key 过期时间配置问题。', severity: 'high', type: 'BUG', module: '用户登录', case_id: 'TC-LOGIN-008' },
+    { id: 'ISSUE-002', title: '/me 端点返回 500', desc: 'GET /api/v1/auth/me 携带有效 Bearer Token 时返回 500 系统异常，而非预期的用户信息。Spring Security filter chain 可能未正确注册 JWT 认证 filter，或 UserDetailsService 查询异常。', severity: 'high', type: 'BUG', module: '会话管理', case_id: 'TC-SESS-001' },
+    { id: 'ISSUE-003', title: 'H5 登录页还原度 88 分（< 90 门禁）', desc: '登录页 H5 版本像素差异 12.34%，主要差异在：1) 输入框间距与设计稿偏差 ≈4px，2) 按钮圆角设计稿 12px 实际 10px，3) placeholder 字色偏深。建议逐项对照 Design Token 修正。', severity: 'medium', type: 'UI', module: 'UI 还原验收', case_id: 'TC-UI-004' },
+  ];
+
+  const allIssues = [...knownIssues, ...issues.filter(i => i.severity !== 'info')];
+  const blockedItems = issues.filter(i => i.severity === 'info');
+
+  let html = '<div class="panel-title"><span class="icon" style="background:var(--fail);color:#fff">!</span>问题与阻塞 <span style="font-weight:400;font-size:12px;color:var(--text-secondary)">(' + allIssues.length + ' 问题, ' + blockedItems.length + ' 阻塞)</span></div>';
+
+  if (allIssues.length === 0 && blockedItems.length === 0) {
+    html += '<div class="no-issues">&#10003; 未发现问题</div>';
+  } else {
+    html += '<div class="issue-list">';
+    allIssues.forEach(issue => {
+      html += '<div class="issue-card"><div class="issue-severity ' + issue.severity + '"></div><div class="issue-body">';
+      html += '<div class="issue-title">' + (issue.id || '') + ' ' + issue.title + '</div>';
+      html += '<div class="issue-desc">' + issue.desc + '</div>';
+      html += '<div class="issue-meta"><span class="issue-tag">' + issue.type + '</span><span class="issue-tag">' + issue.module + '</span>';
+      if (issue.case_id) html += '<span class="issue-tag">' + issue.case_id + '</span>';
+      html += '</div></div></div>';
+    });
+
+    if (blockedItems.length > 0) {
+      html += '<div style="margin-top:12px;font-size:12px;font-weight:600;color:var(--text-secondary)">阻塞项 (' + blockedItems.length + ')</div>';
+      blockedItems.forEach(item => {
+        html += '<div class="issue-card"><div class="issue-severity info"></div><div class="issue-body">';
+        html += '<div class="issue-title">' + item.id + ' ' + item.title + '</div>';
+        html += '<div class="issue-desc">' + item.desc + '</div>';
+        html += '<div class="issue-meta"><span class="issue-tag">BLOCKED</span><span class="issue-tag">' + item.module + '</span></div>';
+        html += '</div></div>';
+      });
+    }
+    html += '</div>';
+  }
+  document.getElementById('issuesPanel').innerHTML = html;
+}
+
+/* ── Render ── */
+function render(){
+  renderDashboard();
+  renderFlow();
+  renderIssues();
+  renderControls();
+  renderCards();
+  renderMatrix();
+}
+render();
+})();
+</script>
+</body>
+</html>

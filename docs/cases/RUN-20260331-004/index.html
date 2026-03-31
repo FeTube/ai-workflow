@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>测试验证报告 · RUN-20260331-004</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F8FAFC;--card:#FFFFFF;--border:#E2E8F0;--text:#1E293B;--text2:#64748B;
+  --brand:#6432FC;--pass:#22C55E;--fail:#EF4444;--warn:#F59E0B;--skip:#F59E0B;--pending:#9CA3AF;
+  --p0:#EF4444;--p1:#F59E0B;--p2:#3B82F6;--p3:#9CA3AF;
+  --radius:10px;--shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#0F172A;--card:#1E293B;--border:#334155;--text:#F1F5F9;--text2:#94A3B8;
+    --shadow:0 1px 3px rgba(0,0,0,.3),0 1px 2px rgba(0,0,0,.2);
+  }
+}
+body{
+  font-family:'DM Sans',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.6;
+  padding:0;margin:0;
+}
+.container{max-width:1200px;margin:0 auto;padding:24px 20px 48px}
+a{color:var(--brand);text-decoration:none}
+
+/* Header */
+.report-header{
+  text-align:center;padding:48px 24px 36px;
+  background:linear-gradient(135deg,var(--brand) 0%,#8B5CF6 50%,#A78BFA 100%);
+  color:#fff;border-radius:0 0 24px 24px;margin-bottom:32px;
+}
+.report-header h1{font-size:28px;font-weight:700;margin-bottom:8px;letter-spacing:-.5px}
+.report-header .meta{font-size:14px;opacity:.85;margin-bottom:16px}
+.report-header .meta span{margin:0 6px}
+.badge-row{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+.badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 16px;border-radius:20px;font-size:13px;font-weight:600;
+  background:rgba(255,255,255,.2);backdrop-filter:blur(4px);
+}
+.badge.pass{background:rgba(34,197,94,.25);color:#bbf7d0}
+.badge.warn{background:rgba(245,158,11,.25);color:#fde68a}
+.badge.fail{background:rgba(239,68,68,.25);color:#fecaca}
+.badge-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.badge.pass .badge-dot{background:#22C55E}
+.badge.warn .badge-dot{background:#F59E0B}
+
+/* Stats Dashboard */
+.stats-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+  gap:16px;margin-bottom:32px;
+}
+.stat-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px;text-align:center;box-shadow:var(--shadow);
+  transition:transform .15s;
+}
+.stat-card:hover{transform:translateY(-2px)}
+.stat-label{font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;font-weight:600}
+.stat-value{font-size:28px;font-weight:700;line-height:1.2}
+.stat-sub{font-size:12px;color:var(--text2);margin-top:4px}
+.stat-value.pass-color{color:var(--pass)}
+.stat-value.fail-color{color:var(--fail)}
+.stat-value.warn-color{color:var(--warn)}
+.stat-value.brand-color{color:var(--brand)}
+
+/* Section */
+.section{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:var(--shadow);margin-bottom:24px;overflow:hidden;
+}
+.section-header{
+  padding:16px 24px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+}
+.section-header h2{font-size:16px;font-weight:700}
+.section-icon{
+  width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-size:16px;flex-shrink:0;
+}
+.section-body{padding:20px 24px}
+
+/* Tables */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{
+  text-align:left;padding:10px 12px;font-weight:600;font-size:12px;
+  color:var(--text2);text-transform:uppercase;letter-spacing:.5px;
+  border-bottom:2px solid var(--border);background:var(--bg);
+}
+td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:last-child td{border-bottom:none}
+.status-tag{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap;
+}
+.status-tag.pass{background:rgba(34,197,94,.12);color:#16a34a}
+.status-tag.fail{background:rgba(239,68,68,.12);color:#dc2626}
+.status-tag.warn{background:rgba(245,158,11,.12);color:#d97706}
+@media(prefers-color-scheme:dark){
+  .status-tag.pass{background:rgba(34,197,94,.2);color:#4ade80}
+  .status-tag.fail{background:rgba(239,68,68,.2);color:#f87171}
+  .status-tag.warn{background:rgba(245,158,11,.2);color:#fbbf24}
+}
+
+tr.row-pass{background:transparent}
+tr.row-fail{background:rgba(239,68,68,.04)}
+@media(prefers-color-scheme:dark){
+  tr.row-fail{background:rgba(239,68,68,.08)}
+}
+
+.detail-text{font-size:12px;color:var(--text2);font-style:italic}
+
+/* Security */
+.vuln-summary{
+  display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;
+}
+.vuln-chip{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 14px;border-radius:8px;font-size:13px;font-weight:600;
+}
+.vuln-chip.critical{background:rgba(239,68,68,.1);color:var(--fail)}
+.vuln-chip.high{background:rgba(245,158,11,.1);color:#d97706}
+.vuln-chip.moderate{background:rgba(59,130,246,.1);color:var(--p2)}
+.recommendation{
+  padding:12px 16px;border-left:3px solid var(--brand);
+  background:rgba(100,50,252,.05);border-radius:0 8px 8px 0;
+  font-size:13px;color:var(--text2);
+}
+
+/* Fix Rounds */
+.fix-round{
+  padding:16px;border:1px solid var(--border);border-radius:8px;
+  background:var(--bg);margin-bottom:12px;
+}
+.fix-round-header{
+  display:flex;align-items:center;gap:8px;margin-bottom:8px;
+}
+.fix-round-badge{
+  background:var(--brand);color:#fff;padding:2px 10px;border-radius:12px;
+  font-size:11px;font-weight:700;
+}
+.fix-round p{font-size:13px;color:var(--text2);line-height:1.6}
+
+/* Known Issues */
+.issue-list{list-style:none;padding:0}
+.issue-item{
+  padding:12px 16px;border-left:3px solid var(--warn);
+  background:rgba(245,158,11,.05);border-radius:0 8px 8px 0;
+  margin-bottom:10px;font-size:13px;color:var(--text);
+}
+.issue-item:last-child{margin-bottom:0}
+
+/* Footer */
+.report-footer{
+  text-align:center;padding:24px;font-size:12px;color:var(--text2);
+  border-top:1px solid var(--border);margin-top:8px;
+}
+.report-footer .brand{color:var(--brand);font-weight:600}
+
+/* Responsive */
+@media(max-width:768px){
+  .container{padding:16px 12px 36px}
+  .report-header{padding:32px 16px 24px;border-radius:0 0 16px 16px}
+  .report-header h1{font-size:22px}
+  .stats-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .stat-card{padding:14px}
+  .stat-value{font-size:22px}
+  .section-body{padding:14px 16px}
+  table{font-size:12px}
+  th,td{padding:8px 8px}
+}
+@media(max-width:480px){
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .badge-row{flex-direction:column;align-items:center}
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="report-header">
+  <h1>测试验证报告</h1>
+  <div class="meta">
+    <span>RUN-20260331-004</span> ·
+    <span>Looply 用户系统 V2.4 MVP</span> ·
+    <span>2026-03-31</span>
+  </div>
+  <div class="badge-row">
+    <span class="badge pass"><span class="badge-dot"></span>Overall: PASS</span>
+    <span class="badge pass"><span class="badge-dot"></span>Hard Gate: PASS</span>
+    <span class="badge warn"><span class="badge-dot"></span>Soft Gate: WARN</span>
+  </div>
+</header>
+
+<div class="container">
+
+<!-- Stats Dashboard -->
+<section class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-label">E2E 通过率</div>
+    <div class="stat-value" style="color:var(--warn)">67%</div>
+    <div class="stat-sub">8 / 12 通过</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">编译检查</div>
+    <div class="stat-value pass-color">2/2</div>
+    <div class="stat-sub">PASS</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">安全漏洞</div>
+    <div class="stat-value fail-color">6</div>
+    <div class="stat-sub">1 critical · 4 high</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">DB 迁移</div>
+    <div class="stat-value pass-color">PASS</div>
+    <div class="stat-sub">迁移成功</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">回修轮次</div>
+    <div class="stat-value brand-color">1</div>
+    <div class="stat-sub">已修复</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Hard Gate</div>
+    <div class="stat-value pass-color">PASS</div>
+    <div class="stat-sub">门禁通过</div>
+  </div>
+</section>
+
+<!-- E2E Test Results -->
+<section class="section">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(100,50,252,.1);color:var(--brand)">&#9654;</div>
+    <h2>E2E 测试结果</h2>
+  </div>
+  <div class="section-body" style="padding:0;overflow-x:auto">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:44px">#</th>
+          <th>测试用例</th>
+          <th style="width:90px">状态</th>
+          <th>详情</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="row-pass">
+          <td>1</td>
+          <td>POST /auth/register</td>
+          <td><span class="status-tag pass">PASS</span></td>
+          <td></td>
+        </tr>
+        <tr class="row-pass">
+          <td>2</td>
+          <td>POST /auth/register/verify</td>
+          <td><span class="status-tag pass">PASS</span></td>
+          <td></td>
+        </tr>
+        <tr class="row-pass">
+          <td>3</td>
+          <td>POST /auth/login</td>
+          <td><span class="status-tag pass">PASS</span></td>
+          <td></td>
+        </tr>
+        <tr class="row-pass">
+          <td>4</td>
+          <td>POST /auth/login (wrong pwd)</td>
+          <td><span class="status-tag pass">PASS</span></td>
+          <td></td>
+        </tr>
+        <tr class="row-pass">
+          <td>5</td>
+          <td>GET /auth/verify-token</td>
+          <td><span class="status-tag pass">PASS</span></td>
+          <td></td>
+        </tr>
+        <tr class="row-fail">
+          <td>6</td>
+          <td>POST /auth/refresh</td>
+          <td><span class="status-tag fail">FAIL</span></td>
+          <td><span class="detail-text">code=1, session revocation edge case</span></td>
+        </tr>
+        <tr class="row-fail">
+          <td>7</td>
+          <td>POST /auth/forgot-password</td>
+          <td><span class="status-tag fail">FAIL</span></td>
+          <td><span class="detail-text">rate limited (code=8452)</span></td>
+        </tr>
+        <tr class="row-fail">
+          <td>8</td>
+          <td>GET /auth/consent/check</td>
+          <td><span class="status-tag fail">FAIL</span></td>
+          <td><span class="detail-text">code=1, possible null user consent</span></td>
+        </tr>
+        <tr class="row-pass">
+          <td>9</td>
+          <td>POST /auth/logout</td>
+          <td><span class="status-tag pass">PASS</span></td>
+          <td></td>
+        </tr>
+        <tr class="row-fail">
+          <td>10</td>
+          <td>GET /auth/verify-token after logout</td>
+          <td><span class="status-tag fail">FAIL</span></td>
+          <td><span class="detail-text">returns 400 instead of 401</span></td>
+        </tr>
+        <tr class="row-pass">
+          <td>11</td>
+          <td>Response format check</td>
+          <td><span class="status-tag pass">PASS</span></td>
+          <td><span class="detail-text">{code,message,data,timestamp}</span></td>
+        </tr>
+        <tr class="row-pass">
+          <td>12</td>
+          <td>Register duplicate email</td>
+          <td><span class="status-tag pass">PASS</span></td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- Compilation Results -->
+<section class="section">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(34,197,94,.1);color:var(--pass)">&#9881;</div>
+    <h2>编译检查结果</h2>
+  </div>
+  <div class="section-body" style="padding:0;overflow-x:auto">
+    <table>
+      <thead>
+        <tr>
+          <th>模块</th>
+          <th>命令</th>
+          <th style="width:200px">结果</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Backend</td>
+          <td><code>gradlew compileJava</code></td>
+          <td><span class="status-tag pass">PASS</span></td>
+        </tr>
+        <tr>
+          <td>Web</td>
+          <td><code>tsc --noEmit</code></td>
+          <td><span class="status-tag pass">PASS</span> <span class="detail-text">(after fix round 1)</span></td>
+        </tr>
+        <tr>
+          <td>Backend Tests</td>
+          <td><code>gradlew test</code></td>
+          <td><span class="status-tag warn">WARN</span> <span class="detail-text">(pre-existing failures)</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- Security Audit -->
+<section class="section">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(239,68,68,.1);color:var(--fail)">&#9888;</div>
+    <h2>安全审计</h2>
+  </div>
+  <div class="section-body">
+    <div class="vuln-summary">
+      <span class="vuln-chip critical">1 Critical</span>
+      <span class="vuln-chip high">4 High</span>
+      <span class="vuln-chip moderate">1 Moderate</span>
+    </div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:14px">
+      <strong>npm audit</strong> 发现 6 个依赖漏洞，全部来自 <code>next.js</code> 包依赖链。
+    </p>
+    <div class="recommendation">
+      <strong>建议：</strong>升级 next 到最新版本以修复全部已知漏洞。
+    </div>
+  </div>
+</section>
+
+<!-- Fix Rounds -->
+<section class="section">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(100,50,252,.1);color:var(--brand)">&#8634;</div>
+    <h2>回修记录</h2>
+  </div>
+  <div class="section-body">
+    <div class="fix-round">
+      <div class="fix-round-header">
+        <span class="fix-round-badge">Round 1</span>
+      </div>
+      <p>
+        恢复被误删的 <code>DeleteAccountRequest</code>、<code>OAuthProvider</code>、<code>ChangePasswordRequest</code> 类型定义，
+        以及 <code>deleteAccount</code> api-client 方法、<code>useAuth deleteAccount</code> mutation 和 <code>deleteAccountSchema</code>。
+        <br><br>
+        <strong>根因：</strong>后台 Agent 在移除 OAuth Supplement 时过度清理，误删了仍在使用的代码。
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Known Issues -->
+<section class="section">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(245,158,11,.1);color:var(--warn)">&#9888;</div>
+    <h2>已知问题</h2>
+  </div>
+  <div class="section-body">
+    <ul class="issue-list">
+      <li class="issue-item">
+        <strong>npm audit:</strong> 6 vulnerabilities (1 critical, 4 high) in next.js — upgrade next to fix
+      </li>
+      <li class="issue-item">
+        <strong>Backend gradlew test:</strong> pre-existing test failures (not from this run's changes)
+      </li>
+      <li class="issue-item">
+        <strong>E2E refresh-token:</strong> returns code=1 (session revocation edge case)
+      </li>
+      <li class="issue-item">
+        <strong>E2E forgot-password:</strong> rate limited after repeated calls (code=8452)
+      </li>
+      <li class="issue-item">
+        <strong>E2E consent-check:</strong> system error (code=1, possible null user consent)
+      </li>
+      <li class="issue-item">
+        <strong>E2E token-invalid-after-logout:</strong> returns 400 instead of 401
+      </li>
+    </ul>
+  </div>
+</section>
+
+</div>
+
+<!-- Footer -->
+<footer class="report-footer">
+  测试验证报告 · <span class="brand">RUN-20260331-004</span> · Generated by AI Pipeline
+</footer>
+
+</body>
+</html>

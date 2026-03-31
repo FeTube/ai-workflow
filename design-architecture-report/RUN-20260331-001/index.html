@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Looply 用户系统 · 技术方案 V2.0 MVP</title>
+<style>
+:root {
+  --primary: #6432FC;
+  --primary-light: #EDE9FE;
+  --bg: #F8F9FB;
+  --card-bg: #FFFFFF;
+  --text-primary: #1A1A1A;
+  --text-secondary: #6B7280;
+  --text-tertiary: #7C8694;
+  --border: #E5E7EB;
+  --success: #22C55E;
+  --error: #EF4444;
+  --warning: #F59E0B;
+  --info: #3B82F6;
+  --pk-bg: #FEF3C7; --pk-text: #92400E;
+  --uk-bg: #EDE9FE; --uk-text: #6D28D9;
+  --fk-bg: #FEE2E2; --fk-text: #DC2626;
+  --nn-bg: #F3F4F6; --nn-text: #4B5563;
+  --def-bg: #D1FAE5; --def-text: #065F46;
+  --rel-1n: #7C3AED; --rel-11: #3B82F6; --rel-logic: #F59E0B;
+  --font: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: var(--font); background: var(--bg); color: var(--text-primary); line-height: 1.6; }
+.container { max-width: 1280px; margin: 0 auto; padding: 32px 24px; }
+
+/* Header */
+.report-header { text-align: center; margin-bottom: 48px; }
+.report-header h1 { font-size: 32px; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+.report-header .meta { color: var(--text-secondary); font-size: 14px; }
+.report-header .meta span { margin: 0 12px; }
+
+/* Stats Bar */
+.stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 40px; }
+.stat-card { background: var(--card-bg); border-radius: 12px; padding: 20px; text-align: center; border: 1px solid var(--border); }
+.stat-card .num { font-size: 36px; font-weight: 700; color: var(--primary); }
+.stat-card .label { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+
+/* Section */
+.section { margin-bottom: 48px; }
+.section-title { font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 24px; padding-bottom: 12px; border-bottom: 2px solid var(--primary); display: flex; align-items: center; gap: 10px; }
+.section-title .icon { width: 28px; height: 28px; background: var(--primary); color: #fff; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; }
+
+/* Table Panel */
+.tbl-panel { background: var(--card-bg); border-radius: 12px; padding: 24px; margin-bottom: 20px; border: 1px solid var(--border); }
+.tbl-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px; }
+.tbl-header h3 { font-family: var(--mono); font-size: 16px; color: var(--primary); font-weight: 600; }
+.tbl-header span { font-size: 13px; color: var(--text-secondary); }
+.tbl-panel table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tbl-panel thead { background: var(--bg); }
+.tbl-panel th { padding: 10px 12px; text-align: left; font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+.tbl-panel td { padding: 10px 12px; border-top: 1px solid var(--border); vertical-align: top; }
+.col-name { font-family: var(--mono); font-weight: 500; color: var(--text-primary); }
+.col-type { font-family: var(--mono); color: var(--text-tertiary); font-size: 12px; }
+.constraint { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-right: 4px; }
+.c-pk { background: var(--pk-bg); color: var(--pk-text); }
+.c-uk { background: var(--uk-bg); color: var(--uk-text); }
+.c-fk { background: var(--fk-bg); color: var(--fk-text); }
+.c-nn { background: var(--nn-bg); color: var(--nn-text); }
+.c-def { background: var(--def-bg); color: var(--def-text); }
+.tbl-indexes { margin-top: 12px; font-size: 12px; color: var(--text-secondary); }
+.tbl-indexes b { color: var(--text-primary); }
+.tag { display: inline-block; padding: 2px 8px; background: var(--primary-light); color: var(--primary); border-radius: 4px; font-family: var(--mono); font-size: 11px; margin-right: 4px; }
+.tag.idx { background: #DBEAFE; color: #1D4ED8; }
+
+/* ER Diagram Container */
+.er-diagram-wrap { position: relative; background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border); padding: 20px 16px; margin-bottom: 24px; min-height: 200px; }
+.er-diagram-wrap svg.er-lines { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 1; }
+.er-toolbar { display: flex; gap: 6px; margin-bottom: 12px; position: relative; z-index: 5; }
+.er-toolbar button { font-size: 10px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 5px; background: var(--bg); color: var(--text-secondary); cursor: pointer; font-family: var(--font); transition: all .15s; }
+.er-toolbar button:hover { border-color: var(--primary); color: var(--primary); }
+.er-toolbar button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.er-layout { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; position: relative; z-index: 2; align-items: start; }
+@media (max-width: 960px) { .er-layout { grid-template-columns: repeat(3, 1fr); gap: 12px; } }
+@media (max-width: 680px) { .er-layout { grid-template-columns: repeat(2, 1fr); gap: 10px; } }
+@media (max-width: 480px) { .er-layout { grid-template-columns: 1fr; } .er-diagram-wrap svg.er-lines { display: none; } }
+/* Drag mode overrides grid → absolute positioning */
+.er-layout.drag-mode { display: block; position: relative; }
+.er-layout.drag-mode .er-entity { position: absolute; width: 220px; }
+.er-layout.drag-mode .er-entity.core { width: 280px; }
+.er-entity { background: var(--card-bg); border: 1.5px solid var(--border); border-radius: 8px; overflow: hidden; transition: box-shadow .15s; }
+.er-entity:hover { box-shadow: 0 2px 10px rgba(100,50,252,0.10); z-index: 3; }
+.er-entity.core { border-color: var(--primary); border-width: 2px; grid-column: span 2; }
+/* Head — clickable to toggle collapse */
+.er-entity .er-head { padding: 6px 10px; background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 4px; cursor: pointer; user-select: none; }
+.er-entity.core .er-head { background: var(--primary-light); }
+.er-entity .er-head h4 { font-family: var(--mono); font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+/* Chevron toggle */
+.er-toggle { width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform .2s; }
+.er-toggle svg { width: 10px; height: 10px; fill: none; stroke: var(--text-tertiary); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.er-entity.collapsed .er-toggle { transform: rotate(-90deg); }
+/* Body & foot — collapse animation */
+.er-entity .er-body { padding: 6px 10px; font-size: 10px; line-height: 1.5; max-height: 300px; overflow: hidden; transition: max-height .2s ease, padding .2s ease, opacity .15s; opacity: 1; }
+.er-entity.collapsed .er-body { max-height: 0; padding-top: 0; padding-bottom: 0; opacity: 0; }
+.er-entity .er-body .field { display: flex; align-items: center; gap: 4px; padding: 1px 0; }
+.er-entity .er-body .field .key-badge { font-size: 8px; font-weight: 700; padding: 0 4px; border-radius: 2px; line-height: 14px; flex-shrink: 0; }
+.er-entity .er-body .field .key-badge.pk { background: var(--pk-bg); color: var(--pk-text); }
+.er-entity .er-body .field .key-badge.fk { background: var(--fk-bg); color: var(--fk-text); }
+.er-entity .er-body .field .key-badge.uk { background: var(--uk-bg); color: var(--uk-text); }
+.er-entity .er-foot { padding: 4px 10px; font-size: 9px; color: var(--text-tertiary); border-top: 1px solid var(--border); line-height: 1.4; max-height: 60px; overflow: hidden; transition: max-height .2s ease, padding .2s ease, opacity .15s; opacity: 1; }
+.er-entity.collapsed .er-foot { max-height: 0; padding-top: 0; padding-bottom: 0; opacity: 0; border-top-color: transparent; }
+/* Drag handle cursor */
+.er-entity.draggable .er-head { cursor: grab; }
+.er-entity.draggable .er-head:active { cursor: grabbing; }
+.er-entity.dragging { opacity: 0.85; z-index: 10; box-shadow: 0 6px 24px rgba(100,50,252,0.18); }
+.rel-badge { font-size: 8px; padding: 1px 5px; border-radius: 3px; font-weight: 600; flex-shrink: 0; }
+.rel-badge.r1n { background: #EDE9FE; color: var(--rel-1n); }
+.rel-badge.r11 { background: #DBEAFE; color: var(--rel-11); }
+.rel-badge.rlogic { background: #FEF3C7; color: #92400E; }
+
+/* ER line labels */
+.er-line-label { font-size: 8px; font-weight: 600; pointer-events: none; }
+.er-line-label.lbl-1n { fill: var(--rel-1n); }
+.er-line-label.lbl-11 { fill: var(--rel-11); }
+.er-line-label.lbl-logic { fill: var(--rel-logic); }
+.er-line-label-bg { fill: var(--card-bg); opacity: 0.85; }
+
+/* Relation Table */
+.rel-table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--card-bg); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+.rel-table thead { background: var(--bg); }
+.rel-table th { padding: 12px 16px; text-align: left; font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+.rel-table td { padding: 12px 16px; border-top: 1px solid var(--border); }
+.rel-table .tbl-name { font-family: var(--mono); font-weight: 500; }
+.rel-type { display: inline-block; padding: 3px 10px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+.rel-1n { background: #EDE9FE; color: var(--rel-1n); }
+.rel-11 { background: #DBEAFE; color: var(--rel-11); }
+.rel-logic { background: #FEF3C7; color: #92400E; }
+
+/* Legend */
+.legend { display: flex; flex-wrap: wrap; gap: 16px; padding: 16px; background: var(--card-bg); border-radius: 10px; border: 1px solid var(--border); font-size: 12px; margin-top: 16px; }
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-line { width: 32px; height: 3px; border-radius: 2px; }
+.legend-line.solid-purple { background: var(--rel-1n); }
+.legend-line.solid-blue { background: var(--rel-11); }
+.legend-line.dashed-yellow { background: repeating-linear-gradient(90deg, var(--rel-logic) 0, var(--rel-logic) 6px, transparent 6px, transparent 10px); }
+
+/* API Section */
+.api-group { margin-bottom: 24px; }
+.api-group h4 { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; }
+.api-card { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; font-size: 13px; }
+.api-method { font-family: var(--mono); font-weight: 700; font-size: 11px; padding: 4px 10px; border-radius: 4px; min-width: 50px; text-align: center; }
+.api-method.get { background: #DBEAFE; color: #1D4ED8; }
+.api-method.post { background: #D1FAE5; color: #065F46; }
+.api-method.put { background: #FEF3C7; color: #92400E; }
+.api-method.patch { background: #FEF3C7; color: #92400E; }
+.api-method.delete { background: #FEE2E2; color: #DC2626; }
+.api-path { font-family: var(--mono); color: var(--text-primary); flex: 1; }
+.api-desc { color: var(--text-secondary); font-size: 12px; }
+.api-auth { font-size: 10px; padding: 2px 6px; border-radius: 3px; background: var(--primary-light); color: var(--primary); font-weight: 600; }
+
+/* Page Route */
+.page-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.page-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.page-card h4 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+.page-card .route { font-family: var(--mono); font-size: 12px; color: var(--primary); margin-bottom: 8px; }
+.page-card .features { display: flex; flex-wrap: wrap; gap: 4px; }
+.page-card .features .ftag { font-size: 10px; padding: 2px 6px; background: var(--bg); border-radius: 3px; color: var(--text-secondary); }
+.platform-badge { font-size: 10px; padding: 2px 8px; border-radius: 3px; font-weight: 600; }
+.platform-badge.web { background: #DBEAFE; color: #1D4ED8; }
+.platform-badge.mobile { background: #D1FAE5; color: #065F46; }
+.platform-badge.both { background: var(--primary-light); color: var(--primary); }
+
+/* Footer */
+.report-footer { text-align: center; padding: 32px 0; color: var(--text-tertiary); font-size: 12px; border-top: 1px solid var(--border); margin-top: 48px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- Header -->
+<div class="report-header">
+  <h1>Looply 用户系统 · 技术方案</h1>
+  <div class="meta">
+    <span>RUN-20260331-001</span>
+    <span>|</span>
+    <span>V2.0 MVP</span>
+    <span>|</span>
+    <span>生成时间: 2026/3/31 10:30:00</span>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-bar">
+  <div class="stat-card"><div class="num">11</div><div class="label">数据表</div></div>
+  <div class="stat-card"><div class="num">21</div><div class="label">API 端点</div></div>
+  <div class="stat-card"><div class="num">20</div><div class="label">前端页面</div></div>
+  <div class="stat-card"><div class="num">25</div><div class="label">功能点覆盖</div></div>
+</div>
+
+<!-- ========== 数据模型 ========== -->
+<div class="section">
+<div class="section-title"><div class="icon">1</div> 数据模型 — MySQL 表</div>
+
+<!-- t_user_account -->
+<div class="tbl-panel">
+  <div class="tbl-header"><h3>t_user_account</h3><span>用户主表 — 系统核心实体，记录用户基础信息和账号状态</span></div>
+  <table>
+    <thead><tr><th>字段</th><th>类型</th><th>约束</th><th>备注说明</th></tr></thead>
+    <tbody>
+      <tr><td class="col-name">id</td><td class="col-type">BIGINT</td><td><span class="constraint c-pk">PK</span><span class="constraint c-nn">NOT NULL</span></td><td>自增主键</td></tr>
+      <tr><td class="col-name">register_channel</td><td class="col-type">VARCHAR(20)</td><td><span class="constraint c-nn">NOT NULL</span></td><td>注册渠道: app/h5/web/merchant_admin/ops_admin</td></tr>
+      <tr><td class="col-name">country_code</td><td class="col-type">VARCHAR(10)</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT ''</span></td><td>ISO 3166-1 国家代码</td></tr>
+      <tr><td class="col-name">status</td><td class="col-type">TINYINT</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT 1</span></td><td>1=正常 2=冻结 3=注销</td></tr>
+      <tr><td class="col-name">deactivated_at</td><td class="col-type">DATETIME(3)</td><td></td><td>注销申请时间，为空=未注销</td></tr>
+      <tr><td class="col-name">created_at</td><td class="col-type">DATETIME(3)</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT CURRENT_TIMESTAMP</span></td><td>注册时间</td></tr>
+      <tr><td class="col-name">updated_at</td><td class="col-type">DATETIME(3)</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT CURRENT_TIMESTAMP</span></td><td>更新时间</td></tr>
+      <tr><td class="col-name">is_deleted</td><td class="col-type">TINYINT</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT 0</span></td><td>逻辑删除 0=否 1=是</td></tr>
+    </tbody>
+  </table>
+  <div class="tbl-indexes"><b>索引:</b> <span class="tag idx">idx_country_code</span> <span class="tag idx">idx_status</span></div>
+</div>
+
+<!-- t_user_credential -->
+<div class="tbl-panel">
+  <div class="tbl-header"><h3>t_user_credential</h3><span>登录凭证表 — 支持邮箱和手机号两种凭证类型</span></div>
+  <table>
+    <thead><tr><th>字段</th><th>类型</th><th>约束</th><th>备注说明</th></tr></thead>
+    <tbody>
+      <tr><td class="col-name">id</td><td class="col-type">BIGINT</td><td><span class="constraint c-pk">PK</span><span class="constraint c-nn">NOT NULL</span></td><td>自增主键</td></tr>
+      <tr><td class="col-name">user_id</td><td class="col-type">BIGINT</td><td><span class="constraint c-fk">FK</span><span class="constraint c-nn">NOT NULL</span></td><td>关联 t_user_account.id</td></tr>
+      <tr><td class="col-name">credential_type</td><td class="col-type">TINYINT</td><td><span class="constraint c-nn">NOT NULL</span></td><td>1=邮箱 2=手机</td></tr>
+      <tr><td class="col-name">country_dial_code</td><td class="col-type">VARCHAR(8)</td><td></td><td>国际区号如 +86，仅手机号类型填写</td></tr>
+      <tr><td class="col-name">credential_value</td><td class="col-type">VARCHAR(128)</td><td><span class="constraint c-nn">NOT NULL</span></td><td>邮箱地址或纯手机号</td></tr>
+      <tr><td class="col-name">password_hash</td><td class="col-type">VARCHAR(256)</td><td></td><td>bcrypt 哈希</td></tr>
+      <tr><td class="col-name">verified_at</td><td class="col-type">DATETIME(3)</td><td></td><td>验证时间，为空=未验证</td></tr>
+      <tr><td class="col-name">created_at</td><td class="col-type">DATETIME(3)</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT CURRENT_TIMESTAMP</span></td><td>创建时间</td></tr>
+      <tr><td class="col-name">updated_at</td><td class="col-type">DATETIME(3)</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT CURRENT_TIMESTAMP</span></td><td>更新时间</td></tr>
+      <tr><td class="col-name">is_deleted</td><td class="col-type">TINYINT</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT 0</span></td><td>逻辑删除</td></tr>
+    </tbody>
+  </table>
+  <div class="tbl-indexes"><b>索引:</b> <span class="tag idx">uk_type_value (credential_type, credential_value)</span> <span class="tag idx">idx_user_id</span></div>
+</div>
+
+<!-- t_user_oauth_account -->
+<div class="tbl-panel">
+  <div class="tbl-header"><h3>t_user_oauth_account</h3><span>第三方 OAuth 账号表 — Google/Apple/Facebook 绑定记录</span></div>
+  <table>
+    <thead><tr><th>字段</th><th>类型</th><th>约束</th><th>备注说明</th></tr></thead>
+    <tbody>
+      <tr><td class="col-name">id</td><td class="col-type">BIGINT</td><td><span class="constraint c-pk">PK</span><span class="constraint c-nn">NOT NULL</span></td><td>自增主键</td></tr>
+      <tr><td class="col-name">user_id</td><td class="col-type">BIGINT</td><td><span class="constraint c-fk">FK</span><span class="constraint c-nn">NOT NULL</span></td><td>关联 t_user_account.id</td></tr>
+      <tr><td class="col-name">provider</td><td class="col-type">VARCHAR(20)</td><td><span class="constraint c-nn">NOT NULL</span></td><td>google/apple/facebook</td></tr>
+      <tr><td class="col-name">provider_uid</td><td class="col-type">VARCHAR(128)</td><td><span class="constraint c-nn">NOT NULL</span></td><td>三方平台唯一标识</td></tr>
+      <tr><td class="col-name">provider_email</td><td class="col-type">VARCHAR(128)</td><td></td><td>三方返回邮箱（含 Apple relay 邮箱）</td></tr>
+      <tr><td class="col-name">provider_name</td><td class="col-type">VARCHAR(64)</td><td></td><td>三方返回昵称（Apple 仅首次授权返回，需立即存储）</td></tr>
+      <tr><td class="col-name">provider_avatar</td><td class="col-type">VARCHAR(512)</td><td></td><td>三方头像 URL</td></tr>
+      <tr><td class="col-name">created_at</td><td class="col-type">DATETIME(3)</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT CURRENT_TIMESTAMP</span></td><td>绑定时间</td></tr>
+      <tr><td class="col-name">updated_at</td><td class="col-type">DATETIME(3)</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT CURRENT_TIMESTAMP</span></td><td>更新时间</td></tr>
+      <tr><td class="col-name">is_deleted</td><td class="col-type">TINYINT</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT 0</span></td><td>逻辑删除</td></tr>
+    </tbody>
+  </table>
+  <div class="tbl-indexes"><b>索引:</b> <span class="tag idx">uk_provider_uid (provider, provider_uid)</span> <span class="tag idx">idx_user_id</span></div>
+</div>
+
+<!-- t_user_profile -->
+<div class="tbl-panel">
+  <div class="tbl-header"><h3>t_user_profile</h3><span>用户资料表 — 昵称、头像、语言等个人信息（含 country_code 和 profile_completed）</span></div>
+  <table>
+    <thead><tr><th>字段</th><th>类型</th><th>约束</th><th>备注说明</th></tr></thead>
+    <tbody>
+      <tr><td class="col-name">id</td><td class="col-type">BIGINT</td><td><span class="constraint c-pk">PK</span><span class="constraint c-nn">NOT NULL</span></td><td>自增主键</td></tr>
+      <tr><td class="col-name">user_id</td><td class="col-type">BIGINT</td><td><span class="constraint c-fk">FK</span><span class="constraint c-nn">NOT NULL</span><span class="constraint c-uk">UK</span></td><td>关联 t_user_account.id，一对一</td></tr>
+      <tr><td class="col-name">nickname</td><td class="col-type">VARCHAR(32)</td><td></td><td>昵称</td></tr>
+      <tr><td class="col-name">avatar_url</td><td class="col-type">VARCHAR(512)</td><td></td><td>头像 URL</td></tr>
+      <tr><td class="col-name">gender</td><td class="col-type">TINYINT</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT 0</span></td><td>0=未知 1=男 2=女</td></tr>
+      <tr><td class="col-name">birthday</td><td class="col-type">DATE</td><td></td><td>生日</td></tr>
+      <tr><td class="col-name">bio</td><td class="col-type">VARCHAR(256)</td><td></td><td>个人简介</td></tr>
+      <tr><td class="col-name">language</td><td class="col-type">VARCHAR(10)</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT 'en'</span></td><td>ISO 639-1 语言代码</td></tr>
+      <tr><td class="col-name">country_code</td><td class="col-type">VARCHAR(10)</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT ''</span></td><td>ISO 3166-1 国家代码（V202603310900 新增）</td></tr>
+      <tr><td class="col-name">profile_completed</td><td class="col-type">TINYINT</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT 0</span></td><td>资料是否完善 0=否 1=是（V202603310900 新增，用于 OAuth 补充资料流程）</td></tr>
+      <tr><td class="col-name">created_at</td><td class="col-type">DATETIME(3)</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT CURRENT_TIMESTAMP</span></td><td>创建时间</td></tr>
+      <tr><td class="col-name">updated_at</td><td class="col-type">DATETIME(3)</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT CURRENT_TIMESTAMP</span></td><td>更新时间</td></tr>
+      <tr><td class="col-name">is_deleted</td><td class="col-type">TINYINT</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT 0</span></td><td>逻辑删除</td></tr>
+    </tbody>
+  </table>
+  <div class="tbl-indexes"><b>索引:</b> <span class="tag idx">uk_user_id</span></div>
+</div>
+
+<!-- t_user_device -->
+<div class="tbl-panel">
+  <div class="tbl-header"><h3>t_user_device</h3><span>用户设备表 — 设备指纹追踪与信任管理</span></div>
+  <table>
+    <thead><tr><th>字段</th><th>类型</th><th>约束</th><th>备注说明</th></tr></thead>
+    <tbody>
+      <tr><td class="col-name">id</td><td class="col-type">BIGINT</td><td><span class="constraint c-pk">PK</span><span class="constraint c-nn">NOT NULL</span></td><td>自增主键</td></tr>
+      <tr><td class="col-name">user_id</td><td class="col-type">BIGINT</td><td><span class="constraint c-fk">FK</span><span class="constraint c-nn">NOT NULL</span></td><td>关联 t_user_account.id</td></tr>
+      <tr><td class="col-name">fingerprint</td><td class="col-type">VARCHAR(128)</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-uk">UK</span></td><td>设备唯一指纹</td></tr>
+      <tr><td class="col-name">os</td><td class="col-type">VARCHAR(32)</td><td></td><td>iOS/Android/Windows/macOS</td></tr>
+      <tr><td class="col-name">is_trusted</td><td class="col-type">TINYINT</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT 0</span></td><td>0=不信任 1=信任</td></tr>
+      <tr><td class="col-name">last_login_at</td><td class="col-type">DATETIME(3)</td><td></td><td>最近登录时间</td></tr>
+      <tr><td class="col-name">created_at</td><td class="col-type">DATETIME(3)</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT CURRENT_TIMESTAMP</span></td><td>首次登录时间</td></tr>
+      <tr><td class="col-name">updated_at</td><td class="col-type">DATETIME(3)</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT CURRENT_TIMESTAMP</span></td><td>更新时间</td></tr>
+      <tr><td class="col-name">is_deleted</td><td class="col-type">TINYINT</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT 0</span></td><td>逻辑删除</td></tr>
+    </tbody>
+  </table>
+  <div class="tbl-indexes"><b>索引:</b> <span class="tag idx">uk_fingerprint</span> <span class="tag idx">idx_user_id</span></div>
+</div>
+
+<!-- t_user_session -->
+<div class="tbl-panel">
+  <div class="tbl-header"><h3>t_user_session</h3><span>登录会话表 — JWT refresh_token 管理与会话生命周期</span></div>
+  <table>
+    <thead><tr><th>字段</th><th>类型</th><th>约束</th><th>备注说明</th></tr></thead>
+    <tbody>
+      <tr><td class="col-name">id</td><td class="col-type">BIGINT</td><td><span class="constraint c-pk">PK</span><span class="constraint c-nn">NOT NULL</span></td><td>自增主键</td></tr>
+      <tr><td class="col-name">user_id</td><td class="col-type">BIGINT</td><td><span class="constraint c-fk">FK</span><span class="constraint c-nn">NOT NULL</span></td><td>关联 t_user_account.id</td></tr>
+      <tr><td class="col-name">device_id</td><td class="col-type">BIGINT</td><td><span class="constraint c-fk">FK</span></td><td>关联 t_user_device.id</td></tr>
+      <tr><td class="col-name">refresh_token</td><td class="col-type">VARCHAR(512)</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-uk">UK</span></td><td>Refresh Token</td></tr>
+      <tr><td class="col-name">login_method</td><td class="col-type">TINYINT</td><td><span class="constraint c-nn">NOT NULL</span></td><td>1=密码 2=验证码 3=三方</td></tr>
+      <tr><td class="col-name">expired_at</td><td class="col-type">DATETIME(3)</td><td><span class="constraint c-nn">NOT NULL</span></td><td>过期时间</td></tr>
+      <tr><td class="col-name">status</td><td class="col-type">TINYINT</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT 1</span></td><td>1=活跃 2=过期 3=吊销</td></tr>
+      <tr><td class="col-name">created_at</td><td class="col-type">DATETIME(3)</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT CURRENT_TIMESTAMP</span></td><td>登录时间</td></tr>
+      <tr><td class="col-name">updated_at</td><td class="col-type">DATETIME(3)</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT CURRENT_TIMESTAMP</span></td><td>更新时间</td></tr>
+      <tr><td class="col-name">is_deleted</td><td class="col-type">TINYINT</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT 0</span></td><td>逻辑删除</td></tr>
+    </tbody>
+  </table>
+  <div class="tbl-indexes"><b>索引:</b> <span class="tag idx">uk_refresh_token</span> <span class="tag idx">idx_user_id</span> <span class="tag idx">idx_device_id</span></div>
+</div>
+
+<!-- t_login_log -->
+<div class="tbl-panel">
+  <div class="tbl-header"><h3>t_login_log</h3><span>登录日志表 — 记录每次登录尝试的结果、IP、设备</span></div>
+  <table>
+    <thead><tr><th>字段</th><th>类型</th><th>约束</th><th>备注说明</th></tr></thead>
+    <tbody>
+      <tr><td class="col-name">id</td><td class="col-type">BIGINT</td><td><span class="constraint c-pk">PK</span><span class="constraint c-nn">NOT NULL</span></td><td>自增主键</td></tr>
+      <tr><td class="col-name">user_id</td><td class="col-type">BIGINT</td><td><span class="constraint c-fk">FK</span><span class="constraint c-nn">NOT NULL</span></td><td>关联 t_user_account.id</td></tr>
+      <tr><td class="col-name">device_id</td><td class="col-type">BIGINT</td><td><span class="constraint c-fk">FK</span></td><td>关联 t_user_device.id</td></tr>
+      <tr><td class="col-name">login_method</td><td class="col-type">TINYINT</td><td><span class="constraint c-nn">NOT NULL</span></td><td>1=密码 2=验证码 3=三方</td></tr>
+      <tr><td class="col-name">ip_address</td><td class="col-type">VARCHAR(45)</td><td></td><td>IPv4/IPv6</td></tr>
+      <tr><td class="col-name">location</td><td class="col-type">VARCHAR(64)</td><td></td><td>国家/城市</td></tr>
+      <tr><td class="col-name">result</td><td class="col-type">TINYINT</td><td><span class="constraint c-nn">NOT NULL</span></td><td>1=成功 2=失败 3=拦截</td></tr>
+      <tr><td class="col-name">fail_reason</td><td class="col-type">VARCHAR(128)</td><td></td><td>失败原因</td></tr>
+      <tr><td class="col-name">created_at</td><td class="col-type">DATETIME(3)</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT CURRENT_TIMESTAMP</span></td><td>登录时间</td></tr>
+      <tr><td class="col-name">is_deleted</td><td class="col-type">TINYINT</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT 0</span></td><td>逻辑删除</td></tr>
+    </tbody>
+  </table>
+  <div class="tbl-indexes"><b>索引:</b> <span class="tag idx">idx_user_id</span> <span class="tag idx">idx_device_id</span> <span class="tag idx">idx_created_at</span></div>
+</div>
+
+<!-- t_verification_code -->
+<div class="tbl-panel">
+  <div class="tbl-header"><h3>t_verification_code</h3><span>验证码表 — 邮箱/SMS 验证码发送与校验记录</span></div>
+  <table>
+    <thead><tr><th>字段</th><th>类型</th><th>约束</th><th>备注说明</th></tr></thead>
+    <tbody>
+      <tr><td class="col-name">id</td><td class="col-type">BIGINT</td><td><span class="constraint c-pk">PK</span><span class="constraint c-nn">NOT NULL</span></td><td>自增主键</td></tr>
+      <tr><td class="col-name">user_id</td><td class="col-type">BIGINT</td><td><span class="constraint c-fk">FK</span></td><td>关联 t_user_account.id，注册时可为空</td></tr>
+      <tr><td class="col-name">purpose</td><td class="col-type">TINYINT</td><td><span class="constraint c-nn">NOT NULL</span></td><td>1=注册 2=重置密码 3=绑定</td></tr>
+      <tr><td class="col-name">channel</td><td class="col-type">TINYINT</td><td><span class="constraint c-nn">NOT NULL</span></td><td>1=邮箱 2=SMS</td></tr>
+      <tr><td class="col-name">target</td><td class="col-type">VARCHAR(128)</td><td><span class="constraint c-nn">NOT NULL</span></td><td>邮箱或手机号</td></tr>
+      <tr><td class="col-name">code</td><td class="col-type">VARCHAR(10)</td><td><span class="constraint c-nn">NOT NULL</span></td><td>6位验证码</td></tr>
+      <tr><td class="col-name">attempt_count</td><td class="col-type">INT</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT 0</span></td><td>已尝试次数，最大5次</td></tr>
+      <tr><td class="col-name">expired_at</td><td class="col-type">DATETIME(3)</td><td><span class="constraint c-nn">NOT NULL</span></td><td>过期时间（10分钟）</td></tr>
+      <tr><td class="col-name">status</td><td class="col-type">TINYINT</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT 1</span></td><td>1=待验证 2=已使用 3=已过期</td></tr>
+      <tr><td class="col-name">created_at</td><td class="col-type">DATETIME(3)</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT CURRENT_TIMESTAMP</span></td><td>创建时间</td></tr>
+      <tr><td class="col-name">is_deleted</td><td class="col-type">TINYINT</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT 0</span></td><td>逻辑删除</td></tr>
+    </tbody>
+  </table>
+  <div class="tbl-indexes"><b>索引:</b> <span class="tag idx">idx_target_purpose (target, purpose)</span> <span class="tag idx">idx_user_id</span></div>
+</div>
+
+<!-- t_risk_record -->
+<div class="tbl-panel">
+  <div class="tbl-header"><h3>t_risk_record</h3><span>风控记录表 — 暴力破解/异地登录/新设备风控判定</span></div>
+  <table>
+    <thead><tr><th>字段</th><th>类型</th><th>约束</th><th>备注说明</th></tr></thead>
+    <tbody>
+      <tr><td class="col-name">id</td><td class="col-type">BIGINT</td><td><span class="constraint c-pk">PK</span><span class="constraint c-nn">NOT NULL</span></td><td>自增主键</td></tr>
+      <tr><td class="col-name">user_id</td><td class="col-type">BIGINT</td><td><span class="constraint c-fk">FK</span><span class="constraint c-nn">NOT NULL</span></td><td>关联 t_user_account.id</td></tr>
+      <tr><td class="col-name">risk_type</td><td class="col-type">TINYINT</td><td><span class="constraint c-nn">NOT NULL</span></td><td>1=暴力破解 2=异地登录 3=新设备</td></tr>
+      <tr><td class="col-name">rule_code</td><td class="col-type">VARCHAR(64)</td><td><span class="constraint c-nn">NOT NULL</span></td><td>规则编码</td></tr>
+      <tr><td class="col-name">action</td><td class="col-type">TINYINT</td><td><span class="constraint c-nn">NOT NULL</span></td><td>1=放行 2=验证 3=拦截 4=封禁</td></tr>
+      <tr><td class="col-name">verify_method</td><td class="col-type">TINYINT</td><td></td><td>action=2 时: 1=人机验证 2=SMS 3=邮箱</td></tr>
+      <tr><td class="col-name">passed</td><td class="col-type">TINYINT(1)</td><td><span class="constraint c-nn">NOT NULL</span></td><td>1=通过 0=未通过</td></tr>
+      <tr><td class="col-name">ip_address</td><td class="col-type">VARCHAR(45)</td><td></td><td>IPv4/IPv6</td></tr>
+      <tr><td class="col-name">created_at</td><td class="col-type">DATETIME(3)</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT CURRENT_TIMESTAMP</span></td><td>触发时间</td></tr>
+      <tr><td class="col-name">is_deleted</td><td class="col-type">TINYINT</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT 0</span></td><td>逻辑删除</td></tr>
+    </tbody>
+  </table>
+  <div class="tbl-indexes"><b>索引:</b> <span class="tag idx">idx_user_id</span> <span class="tag idx">idx_created_at</span></div>
+</div>
+
+<!-- t_audit_log -->
+<div class="tbl-panel">
+  <div class="tbl-header"><h3>t_audit_log</h3><span>审计日志表 — 改密码/绑定凭证/注销等安全操作审计</span></div>
+  <table>
+    <thead><tr><th>字段</th><th>类型</th><th>约束</th><th>备注说明</th></tr></thead>
+    <tbody>
+      <tr><td class="col-name">id</td><td class="col-type">BIGINT</td><td><span class="constraint c-pk">PK</span><span class="constraint c-nn">NOT NULL</span></td><td>自增主键</td></tr>
+      <tr><td class="col-name">user_id</td><td class="col-type">BIGINT</td><td><span class="constraint c-fk">FK</span><span class="constraint c-nn">NOT NULL</span></td><td>关联 t_user_account.id</td></tr>
+      <tr><td class="col-name">action_type</td><td class="col-type">TINYINT</td><td><span class="constraint c-nn">NOT NULL</span></td><td>1=改密码 2=绑定凭证 3=解绑凭证 4=绑定三方 5=解绑三方 6=注销</td></tr>
+      <tr><td class="col-name">detail</td><td class="col-type">TEXT</td><td></td><td>JSON 格式详情</td></tr>
+      <tr><td class="col-name">ip_address</td><td class="col-type">VARCHAR(45)</td><td></td><td>IP 地址</td></tr>
+      <tr><td class="col-name">device_info</td><td class="col-type">VARCHAR(256)</td><td></td><td>User-Agent</td></tr>
+      <tr><td class="col-name">created_at</td><td class="col-type">DATETIME(3)</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT CURRENT_TIMESTAMP</span></td><td>操作时间</td></tr>
+      <tr><td class="col-name">is_deleted</td><td class="col-type">TINYINT</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT 0</span></td><td>逻辑删除</td></tr>
+    </tbody>
+  </table>
+  <div class="tbl-indexes"><b>索引:</b> <span class="tag idx">idx_user_id</span> <span class="tag idx">idx_created_at</span></div>
+</div>
+
+<!-- t_user_consent -->
+<div class="tbl-panel">
+  <div class="tbl-header"><h3>t_user_consent</h3><span>合规同意记录表 — 隐私政策和用户协议版本化同意</span></div>
+  <table>
+    <thead><tr><th>字段</th><th>类型</th><th>约束</th><th>备注说明</th></tr></thead>
+    <tbody>
+      <tr><td class="col-name">id</td><td class="col-type">BIGINT</td><td><span class="constraint c-pk">PK</span><span class="constraint c-nn">NOT NULL</span></td><td>自增主键</td></tr>
+      <tr><td class="col-name">user_id</td><td class="col-type">BIGINT</td><td><span class="constraint c-fk">FK</span><span class="constraint c-nn">NOT NULL</span></td><td>关联 t_user_account.id</td></tr>
+      <tr><td class="col-name">consent_type</td><td class="col-type">TINYINT</td><td><span class="constraint c-nn">NOT NULL</span></td><td>1=隐私政策 2=用户协议</td></tr>
+      <tr><td class="col-name">policy_version</td><td class="col-type">VARCHAR(16)</td><td><span class="constraint c-nn">NOT NULL</span></td><td>协议版本号，如 v1.0</td></tr>
+      <tr><td class="col-name">country_code</td><td class="col-type">VARCHAR(10)</td><td></td><td>ISO 3166-1 国家代码</td></tr>
+      <tr><td class="col-name">agreed_at</td><td class="col-type">DATETIME(3)</td><td><span class="constraint c-nn">NOT NULL</span></td><td>同意时间</td></tr>
+      <tr><td class="col-name">created_at</td><td class="col-type">DATETIME(3)</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT CURRENT_TIMESTAMP</span></td><td>创建时间</td></tr>
+      <tr><td class="col-name">updated_at</td><td class="col-type">DATETIME(3)</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT CURRENT_TIMESTAMP</span></td><td>更新时间</td></tr>
+      <tr><td class="col-name">is_deleted</td><td class="col-type">TINYINT</td><td><span class="constraint c-nn">NOT NULL</span><span class="constraint c-def">DEFAULT 0</span></td><td>逻辑删除</td></tr>
+    </tbody>
+  </table>
+  <div class="tbl-indexes"><b>索引:</b> <span class="tag idx">uk_user_type_version (user_id, consent_type, policy_version)</span> <span class="tag idx">idx_user_id</span></div>
+</div>
+
+</div><!-- end section 1 -->
+
+<!-- ========== ER Diagram ========== -->
+<div class="section">
+<div class="section-title"><div class="icon">2</div> 实体关系图</div>
+
+<div class="er-diagram-wrap" id="erDiagram">
+  <!-- Toolbar -->
+  <div class="er-toolbar">
+    <button id="btnExpandAll" title="展开全部">展开全部</button>
+    <button id="btnCollapseAll" title="收起全部">收起全部</button>
+    <button id="btnToggleDrag" title="切换拖拽模式">拖拽布局</button>
+    <button id="btnResetLayout" title="还原默认自适应布局">还原布局</button>
+  </div>
+
+  <svg class="er-lines" id="erSvg">
+    <defs>
+      <marker id="arrow-1n" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,1 L8,5 L0,9 Z" fill="#7C3AED"/></marker>
+      <marker id="arrow-11" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,1 L8,5 L0,9 Z" fill="#3B82F6"/></marker>
+      <marker id="arrow-logic" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,1 L8,5 L0,9 Z" fill="#F59E0B"/></marker>
+      <marker id="dot-1n" viewBox="0 0 6 6" refX="3" refY="3" markerWidth="5" markerHeight="5"><circle cx="3" cy="3" r="2.5" fill="#7C3AED"/></marker>
+      <marker id="dot-11" viewBox="0 0 6 6" refX="3" refY="3" markerWidth="5" markerHeight="5"><circle cx="3" cy="3" r="2.5" fill="#3B82F6"/></marker>
+      <marker id="dot-logic" viewBox="0 0 6 6" refX="3" refY="3" markerWidth="5" markerHeight="5"><circle cx="3" cy="3" r="2.5" fill="#F59E0B"/></marker>
+    </defs>
+  </svg>
+
+  <div class="er-layout" id="erLayout">
+    <!-- Row 1: credential | account(core span2) | oauth -->
+    <div class="er-entity" data-entity="credential">
+      <div class="er-head"><h4>t_user_credential</h4><span class="rel-badge r1n">N:1</span><span class="er-toggle"><svg viewBox="0 0 12 12"><polyline points="2,4 6,8 10,4"/></svg></span></div>
+      <div class="er-body">
+        <div class="field"><span class="key-badge pk">PK</span> id</div>
+        <div class="field"><span class="key-badge fk">FK</span> user_id</div>
+        <div class="field"><span class="key-badge uk">UK</span> type + value</div>
+        <div class="field">password_hash</div>
+      </div>
+      <div class="er-foot">邮箱/手机号凭证，支持多凭证绑定</div>
+    </div>
+
+    <div class="er-entity core" data-entity="account">
+      <div class="er-head"><h4>t_user_account</h4><span class="rel-badge r1n">核心 1:N</span><span class="er-toggle"><svg viewBox="0 0 12 12"><polyline points="2,4 6,8 10,4"/></svg></span></div>
+      <div class="er-body">
+        <div class="field"><span class="key-badge pk">PK</span> id BIGINT</div>
+        <div class="field">register_channel, country_code</div>
+        <div class="field">status, deactivated_at</div>
+      </div>
+      <div class="er-foot">核心实体，所有表外键来源</div>
+    </div>
+
+    <div class="er-entity" data-entity="oauth">
+      <div class="er-head"><h4>t_user_oauth_account</h4><span class="rel-badge r1n">N:1</span><span class="er-toggle"><svg viewBox="0 0 12 12"><polyline points="2,4 6,8 10,4"/></svg></span></div>
+      <div class="er-body">
+        <div class="field"><span class="key-badge pk">PK</span> id</div>
+        <div class="field"><span class="key-badge fk">FK</span> user_id</div>
+        <div class="field"><span class="key-badge uk">UK</span> provider + uid</div>
+        <div class="field">email, name, avatar</div>
+      </div>
+      <div class="er-foot">Google/Apple/Facebook 绑定</div>
+    </div>
+
+    <!-- Row 2: profile | device | session | loginlog -->
+    <div class="er-entity" data-entity="profile">
+      <div class="er-head"><h4>t_user_profile</h4><span class="rel-badge r11">1:1</span><span class="er-toggle"><svg viewBox="0 0 12 12"><polyline points="2,4 6,8 10,4"/></svg></span></div>
+      <div class="er-body">
+        <div class="field"><span class="key-badge pk">PK</span> id</div>
+        <div class="field"><span class="key-badge fk">FK</span><span class="key-badge uk">UK</span> user_id</div>
+        <div class="field">nickname, avatar_url</div>
+        <div class="field">country_code, profile_completed</div>
+      </div>
+      <div class="er-foot">个人资料，1:1，新增国家和完善状态</div>
+    </div>
+
+    <div class="er-entity" data-entity="device">
+      <div class="er-head"><h4>t_user_device</h4><span class="rel-badge r1n">N:1</span><span class="er-toggle"><svg viewBox="0 0 12 12"><polyline points="2,4 6,8 10,4"/></svg></span></div>
+      <div class="er-body">
+        <div class="field"><span class="key-badge pk">PK</span> id</div>
+        <div class="field"><span class="key-badge fk">FK</span> user_id</div>
+        <div class="field"><span class="key-badge uk">UK</span> fingerprint</div>
+        <div class="field">os, is_trusted</div>
+      </div>
+      <div class="er-foot">设备指纹追踪与信任管理</div>
+    </div>
+
+    <div class="er-entity" data-entity="session">
+      <div class="er-head"><h4>t_user_session</h4><span class="rel-badge r1n">N:1</span><span class="er-toggle"><svg viewBox="0 0 12 12"><polyline points="2,4 6,8 10,4"/></svg></span></div>
+      <div class="er-body">
+        <div class="field"><span class="key-badge pk">PK</span> id</div>
+        <div class="field"><span class="key-badge fk">FK</span> user_id</div>
+        <div class="field"><span class="key-badge fk">FK</span> device_id</div>
+        <div class="field"><span class="key-badge uk">UK</span> refresh_token</div>
+      </div>
+      <div class="er-foot">JWT 会话管理，多设备并发</div>
+    </div>
+
+    <div class="er-entity" data-entity="loginlog">
+      <div class="er-head"><h4>t_login_log</h4><span class="rel-badge r1n">N:1</span><span class="er-toggle"><svg viewBox="0 0 12 12"><polyline points="2,4 6,8 10,4"/></svg></span></div>
+      <div class="er-body">
+        <div class="field"><span class="key-badge pk">PK</span> id</div>
+        <div class="field"><span class="key-badge fk">FK</span> user_id, device_id</div>
+        <div class="field">method, result</div>
+        <div class="field">ip, location</div>
+      </div>
+      <div class="er-foot">登录尝试日志，安全审计</div>
+    </div>
+
+    <!-- Row 3: vcode | risk | audit | consent -->
+    <div class="er-entity" data-entity="vcode">
+      <div class="er-head"><h4>t_verification_code</h4><span class="rel-badge r1n">N:1</span><span class="er-toggle"><svg viewBox="0 0 12 12"><polyline points="2,4 6,8 10,4"/></svg></span></div>
+      <div class="er-body">
+        <div class="field"><span class="key-badge pk">PK</span> id</div>
+        <div class="field"><span class="key-badge fk">FK</span> user_id (nullable)</div>
+        <div class="field">purpose, channel, target</div>
+        <div class="field">code, attempt_count</div>
+      </div>
+      <div class="er-foot">验证码 10min 有效，限频5次</div>
+    </div>
+
+    <div class="er-entity" data-entity="risk">
+      <div class="er-head"><h4>t_risk_record</h4><span class="rel-badge r1n">N:1</span><span class="er-toggle"><svg viewBox="0 0 12 12"><polyline points="2,4 6,8 10,4"/></svg></span></div>
+      <div class="er-body">
+        <div class="field"><span class="key-badge pk">PK</span> id</div>
+        <div class="field"><span class="key-badge fk">FK</span> user_id</div>
+        <div class="field">risk_type, rule_code</div>
+        <div class="field">action, passed</div>
+      </div>
+      <div class="er-foot">风控规则触发记录</div>
+    </div>
+
+    <div class="er-entity" data-entity="audit">
+      <div class="er-head"><h4>t_audit_log</h4><span class="rel-badge r1n">N:1</span><span class="er-toggle"><svg viewBox="0 0 12 12"><polyline points="2,4 6,8 10,4"/></svg></span></div>
+      <div class="er-body">
+        <div class="field"><span class="key-badge pk">PK</span> id</div>
+        <div class="field"><span class="key-badge fk">FK</span> user_id</div>
+        <div class="field">action_type, detail</div>
+        <div class="field">ip, device_info</div>
+      </div>
+      <div class="er-foot">安全操作审计日志</div>
+    </div>
+
+    <div class="er-entity" data-entity="consent">
+      <div class="er-head"><h4>t_user_consent</h4><span class="rel-badge r1n">N:1</span><span class="er-toggle"><svg viewBox="0 0 12 12"><polyline points="2,4 6,8 10,4"/></svg></span></div>
+      <div class="er-body">
+        <div class="field"><span class="key-badge pk">PK</span> id</div>
+        <div class="field"><span class="key-badge fk">FK</span> user_id</div>
+        <div class="field"><span class="key-badge uk">UK</span> user+type+ver</div>
+        <div class="field">agreed_at, country_code</div>
+      </div>
+      <div class="er-foot">协议版本化同意记录</div>
+    </div>
+  </div>
+</div>
+
+<!-- Legend -->
+<div class="legend" style="font-size:10px; gap:12px; padding:10px 14px; margin-top:12px;">
+  <div class="legend-item"><svg width="28" height="10"><circle cx="3" cy="5" r="2.5" fill="#7C3AED"/><line x1="6" y1="5" x2="22" y2="5" stroke="#7C3AED" stroke-width="1.5"/><polygon points="22,2 27,5 22,8" fill="#7C3AED"/></svg> 1:N 外键</div>
+  <div class="legend-item"><svg width="28" height="10"><circle cx="3" cy="5" r="2.5" fill="#3B82F6"/><line x1="6" y1="5" x2="22" y2="5" stroke="#3B82F6" stroke-width="1.5"/><polygon points="22,2 27,5 22,8" fill="#3B82F6"/></svg> 1:1 唯一</div>
+  <div class="legend-item"><svg width="28" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#F59E0B" stroke-width="1.5" stroke-dasharray="4,3"/><polygon points="22,2 27,5 22,8" fill="#F59E0B"/></svg> 逻辑关联</div>
+  <div class="legend-item"><span class="key-badge pk" style="font-size:8px;background:#FEF3C7;color:#92400E;padding:0 4px;border-radius:2px;">PK</span> 主键</div>
+  <div class="legend-item"><span class="key-badge fk" style="font-size:8px;background:#FEE2E2;color:#DC2626;padding:0 4px;border-radius:2px;">FK</span> 外键</div>
+  <div class="legend-item"><span class="key-badge uk" style="font-size:8px;background:#EDE9FE;color:#6D28D9;padding:0 4px;border-radius:2px;">UK</span> 唯一键</div>
+</div>
+
+<!-- Relation Detail Table -->
+<h4 style="margin: 24px 0 12px; font-size: 16px;">关系明细表</h4>
+<table class="rel-table">
+  <thead><tr><th>主表</th><th>从表</th><th>关系</th><th>关联字段</th><th>逻辑说明</th></tr></thead>
+  <tbody>
+    <tr>
+      <td class="tbl-name">t_user_account</td><td class="tbl-name">t_user_credential</td>
+      <td><span class="rel-type rel-1n">1:N</span></td>
+      <td>user_account.id → user_credential.user_id</td>
+      <td>一个用户可拥有多种登录凭证（邮箱+手机号），支持多凭证绑定</td>
+    </tr>
+    <tr>
+      <td class="tbl-name">t_user_account</td><td class="tbl-name">t_user_oauth_account</td>
+      <td><span class="rel-type rel-1n">1:N</span></td>
+      <td>user_account.id → user_oauth_account.user_id</td>
+      <td>一个用户可绑定多个三方账号（Google+Apple+Facebook）</td>
+    </tr>
+    <tr>
+      <td class="tbl-name">t_user_account</td><td class="tbl-name">t_user_profile</td>
+      <td><span class="rel-type rel-11">1:1</span></td>
+      <td>user_account.id → user_profile.user_id (UNIQUE)</td>
+      <td>用户资料与账号严格一对一，注册时自动创建；V2.0 新增 country_code 和 profile_completed 字段支持 OAuth 补充资料流程</td>
+    </tr>
+    <tr>
+      <td class="tbl-name">t_user_account</td><td class="tbl-name">t_user_device</td>
+      <td><span class="rel-type rel-1n">1:N</span></td>
+      <td>user_account.id → user_device.user_id</td>
+      <td>一个用户可在多个设备登录，设备指纹用于风控判断和信任管理</td>
+    </tr>
+    <tr>
+      <td class="tbl-name">t_user_account</td><td class="tbl-name">t_user_session</td>
+      <td><span class="rel-type rel-1n">1:N</span></td>
+      <td>user_account.id → user_session.user_id</td>
+      <td>一个用户可有多个活跃会话（多设备同时在线），支持会话吊销</td>
+    </tr>
+    <tr>
+      <td class="tbl-name">t_user_account</td><td class="tbl-name">t_login_log</td>
+      <td><span class="rel-type rel-1n">1:N</span></td>
+      <td>user_account.id → login_log.user_id</td>
+      <td>记录用户所有登录尝试，用于安全审计和限频判断</td>
+    </tr>
+    <tr>
+      <td class="tbl-name">t_user_account</td><td class="tbl-name">t_verification_code</td>
+      <td><span class="rel-type rel-1n">1:N</span></td>
+      <td>user_account.id → verification_code.user_id</td>
+      <td>注册时 user_id 为空，重置密码/绑定时关联用户；验证码10分钟有效，最多尝试5次</td>
+    </tr>
+    <tr>
+      <td class="tbl-name">t_user_account</td><td class="tbl-name">t_risk_record</td>
+      <td><span class="rel-type rel-1n">1:N</span></td>
+      <td>user_account.id → risk_record.user_id</td>
+      <td>风控规则触发后记录，用于安全分析和规则调优</td>
+    </tr>
+    <tr>
+      <td class="tbl-name">t_user_account</td><td class="tbl-name">t_audit_log</td>
+      <td><span class="rel-type rel-1n">1:N</span></td>
+      <td>user_account.id → audit_log.user_id</td>
+      <td>记录改密码、绑定/解绑、注销等安全操作，满足合规审计要求</td>
+    </tr>
+    <tr>
+      <td class="tbl-name">t_user_account</td><td class="tbl-name">t_user_consent</td>
+      <td><span class="rel-type rel-1n">1:N</span></td>
+      <td>user_account.id → user_consent.user_id</td>
+      <td>协议版本更新后需重新同意，每次同意新增一条记录（唯一键防重复）</td>
+    </tr>
+    <tr>
+      <td class="tbl-name">t_user_device</td><td class="tbl-name">t_user_session</td>
+      <td><span class="rel-type rel-1n">1:N</span></td>
+      <td>user_device.id → user_session.device_id</td>
+      <td>同一设备上可能多次登录产生多个会话，会话关联设备便于按设备踢出</td>
+    </tr>
+    <tr>
+      <td class="tbl-name">t_user_device</td><td class="tbl-name">t_login_log</td>
+      <td><span class="rel-type rel-1n">1:N</span></td>
+      <td>user_device.id → login_log.device_id</td>
+      <td>追踪设备维度的登录行为，支持新设备风控检测</td>
+    </tr>
+    <tr>
+      <td class="tbl-name">t_user_session</td><td class="tbl-name">Redis:token_blacklist</td>
+      <td><span class="rel-type rel-logic">逻辑</span></td>
+      <td>session.access_token ↔ Redis token:blacklist:{jti}</td>
+      <td>退出登录时 access_token 写入 Redis 黑名单，过期时间与 Token TTL 一致，Token 校验时先查黑名单</td>
+    </tr>
+    <tr>
+      <td class="tbl-name">t_verification_code</td><td class="tbl-name">Redis:rate_limit</td>
+      <td><span class="rel-type rel-logic">逻辑</span></td>
+      <td>verification_code.target ↔ Redis rate:email:{target}</td>
+      <td>验证码发送限频通过 Redis 计数器实现（60s 冷却 / 5次每小时 / 10次每 IP），防止短信轰炸</td>
+    </tr>
+  </tbody>
+</table>
+
+</div><!-- end section 2 -->
+
+<!-- ========== API 契约 ========== -->
+<div class="section">
+<div class="section-title"><div class="icon">3</div> API 契约 — 21 个端点</div>
+
+<div class="api-group">
+  <h4>注册（4 个端点）</h4>
+  <div class="api-card"><span class="api-method post">POST</span><span class="api-path">/api/v1/auth/register</span><span class="api-desc">邮箱注册第一步：发送验证码</span></div>
+  <div class="api-card"><span class="api-method post">POST</span><span class="api-path">/api/v1/auth/register/verify</span><span class="api-desc">注册第二步：验证码校验 + 创建账号</span></div>
+  <div class="api-card"><span class="api-method post">POST</span><span class="api-path">/api/v1/auth/verify-code/resend</span><span class="api-desc">重新发送验证码</span></div>
+  <div class="api-card"><span class="api-method post">POST</span><span class="api-path">/api/v1/auth/oauth/supplement</span><span class="api-desc">OAuth 注册后补充资料（country_code 等）</span><span class="api-auth">AUTH</span></div>
+</div>
+
+<div class="api-group">
+  <h4>登录 / Token（5 个端点）</h4>
+  <div class="api-card"><span class="api-method post">POST</span><span class="api-path">/api/v1/auth/login</span><span class="api-desc">邮箱密码登录</span></div>
+  <div class="api-card"><span class="api-method post">POST</span><span class="api-path">/api/v1/auth/refresh</span><span class="api-desc">刷新 Token（旋转刷新）</span></div>
+  <div class="api-card"><span class="api-method post">POST</span><span class="api-path">/api/v1/auth/logout</span><span class="api-desc">退出登录，access_token 写入黑名单</span><span class="api-auth">AUTH</span></div>
+  <div class="api-card"><span class="api-method get">GET</span><span class="api-path">/api/v1/auth/verify-token</span><span class="api-desc">校验 Token 有效性</span><span class="api-auth">AUTH</span></div>
+  <div class="api-card"><span class="api-method get">GET</span><span class="api-path">/api/v1/auth/consent/check</span><span class="api-desc">协议版本检查（登录后触发）</span><span class="api-auth">AUTH</span></div>
+</div>
+
+<div class="api-group">
+  <h4>OAuth 三方登录（6 个端点）</h4>
+  <div class="api-card"><span class="api-method get">GET</span><span class="api-path">/api/v1/auth/google</span><span class="api-desc">Google OAuth 跳转</span></div>
+  <div class="api-card"><span class="api-method get">GET</span><span class="api-path">/api/v1/auth/google/callback</span><span class="api-desc">Google OAuth 回调</span></div>
+  <div class="api-card"><span class="api-method get">GET</span><span class="api-path">/api/v1/auth/apple</span><span class="api-desc">Apple OAuth 跳转</span></div>
+  <div class="api-card"><span class="api-method get">GET</span><span class="api-path">/api/v1/auth/apple/callback</span><span class="api-desc">Apple OAuth 回调</span></div>
+  <div class="api-card"><span class="api-method get">GET</span><span class="api-path">/api/v1/auth/facebook</span><span class="api-desc">Facebook OAuth 跳转</span></div>
+  <div class="api-card"><span class="api-method get">GET</span><span class="api-path">/api/v1/auth/facebook/callback</span><span class="api-desc">Facebook OAuth 回调</span></div>
+</div>
+
+<div class="api-group">
+  <h4>密码重置（3 个端点）</h4>
+  <div class="api-card"><span class="api-method post">POST</span><span class="api-path">/api/v1/auth/forgot-password</span><span class="api-desc">发送密码重置验证码</span></div>
+  <div class="api-card"><span class="api-method post">POST</span><span class="api-path">/api/v1/auth/forgot-password/verify</span><span class="api-desc">忘记密码验证码校验，返回 resetToken</span></div>
+  <div class="api-card"><span class="api-method post">POST</span><span class="api-path">/api/v1/auth/reset-password</span><span class="api-desc">使用 resetToken 重置密码</span></div>
+</div>
+
+<div class="api-group">
+  <h4>账号管理（3 个端点）</h4>
+  <div class="api-card"><span class="api-method post">POST</span><span class="api-path">/api/v1/auth/delete-account</span><span class="api-desc">账号注销（30天冷却期）</span><span class="api-auth">AUTH</span></div>
+  <div class="api-card"><span class="api-method post">POST</span><span class="api-path">/api/v1/auth/consent/agree</span><span class="api-desc">同意协议版本</span><span class="api-auth">AUTH</span></div>
+  <div class="api-card"><span class="api-method put">PUT</span><span class="api-path">/api/v1/users/me/password</span><span class="api-desc">修改密码（已登录）</span><span class="api-auth">AUTH</span></div>
+</div>
+
+<div class="api-group">
+  <h4>用户资料（3 个端点）</h4>
+  <div class="api-card"><span class="api-method get">GET</span><span class="api-path">/api/v1/users/me</span><span class="api-desc">获取当前用户信息（含 profile_completed 状态）</span><span class="api-auth">AUTH</span></div>
+  <div class="api-card"><span class="api-method patch">PATCH</span><span class="api-path">/api/v1/users/me</span><span class="api-desc">更新用户资料（nickname、bio、language 等）</span><span class="api-auth">AUTH</span></div>
+  <div class="api-card"><span class="api-method post">POST</span><span class="api-path">/api/v1/users/me/avatar</span><span class="api-desc">上传头像至 OSS</span><span class="api-auth">AUTH</span></div>
+</div>
+
+</div><!-- end section 3 -->
+
+<!-- ========== 前端架构 ========== -->
+<div class="section">
+<div class="section-title"><div class="icon">4</div> 前端架构 — 页面路由 + 组件</div>
+
+<div class="page-grid">
+  <!-- PC Web -->
+  <div class="page-card">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h4>登录页</h4><span class="platform-badge web">Web</span></div>
+    <div class="route">web: /login</div>
+    <div class="features"><span class="ftag">F-AUTH-014</span><span class="ftag">F-AUTH-015</span><span class="ftag">F-AUTH-018</span><span class="ftag">F-AUTH-007</span></div>
+  </div>
+  <div class="page-card">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h4>注册页</h4><span class="platform-badge web">Web</span></div>
+    <div class="route">web: /register</div>
+    <div class="features"><span class="ftag">F-AUTH-001</span><span class="ftag">F-AUTH-002</span><span class="ftag">F-AUTH-003</span><span class="ftag">F-AUTH-004</span></div>
+  </div>
+  <div class="page-card">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h4>验证码输入页</h4><span class="platform-badge web">Web</span></div>
+    <div class="route">web: /verify-code</div>
+    <div class="features"><span class="ftag">F-AUTH-011</span><span class="ftag">F-AUTH-001</span><span class="ftag">F-AUTH-016</span></div>
+  </div>
+  <div class="page-card">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h4>忘记密码页</h4><span class="platform-badge web">Web</span></div>
+    <div class="route">web: /forgot-password</div>
+    <div class="features"><span class="ftag">F-AUTH-016</span></div>
+  </div>
+  <div class="page-card">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h4>重置密码页</h4><span class="platform-badge web">Web</span></div>
+    <div class="route">web: /reset-password</div>
+    <div class="features"><span class="ftag">F-AUTH-017</span></div>
+  </div>
+  <div class="page-card">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h4>用户协议页</h4><span class="platform-badge web">Web</span></div>
+    <div class="route">web: /terms</div>
+    <div class="features"><span class="ftag">F-AUTH-008</span></div>
+  </div>
+  <div class="page-card">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h4>隐私政策页</h4><span class="platform-badge web">Web</span></div>
+    <div class="route">web: /privacy</div>
+    <div class="features"><span class="ftag">F-AUTH-009</span></div>
+  </div>
+  <div class="page-card">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h4>修改密码页</h4><span class="platform-badge web">Web</span></div>
+    <div class="route">web: /settings/password</div>
+    <div class="features"><span class="ftag">F-AUTH-024</span></div>
+  </div>
+  <div class="page-card">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h4>账号注销页</h4><span class="platform-badge web">Web</span></div>
+    <div class="route">web: /settings/delete-account</div>
+    <div class="features"><span class="ftag">F-AUTH-023</span></div>
+  </div>
+  <div class="page-card">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h4>首页（占位）</h4><span class="platform-badge web">Web</span></div>
+    <div class="route">web: / (homepage placeholder)</div>
+    <div class="features"><span class="ftag">F-CORE-001</span></div>
+  </div>
+
+  <!-- Mobile RN -->
+  <div class="page-card">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h4>登录页</h4><span class="platform-badge mobile">Mobile</span></div>
+    <div class="route">mobile: LoginScreen</div>
+    <div class="features"><span class="ftag">F-AUTH-014</span><span class="ftag">F-AUTH-015</span><span class="ftag">F-AUTH-018</span></div>
+  </div>
+  <div class="page-card">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h4>注册页</h4><span class="platform-badge mobile">Mobile</span></div>
+    <div class="route">mobile: RegisterScreen</div>
+    <div class="features"><span class="ftag">F-AUTH-001</span><span class="ftag">F-AUTH-002</span><span class="ftag">F-AUTH-003</span></div>
+  </div>
+  <div class="page-card">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h4>验证码输入页</h4><span class="platform-badge mobile">Mobile</span></div>
+    <div class="route">mobile: VerifyCodeScreen</div>
+    <div class="features"><span class="ftag">F-AUTH-011</span><span class="ftag">F-AUTH-016</span></div>
+  </div>
+  <div class="page-card">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h4>忘记密码页</h4><span class="platform-badge mobile">Mobile</span></div>
+    <div class="route">mobile: ForgotPasswordScreen</div>
+    <div class="features"><span class="ftag">F-AUTH-016</span></div>
+  </div>
+  <div class="page-card">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h4>重置密码页</h4><span class="platform-badge mobile">Mobile</span></div>
+    <div class="route">mobile: ResetPasswordScreen</div>
+    <div class="features"><span class="ftag">F-AUTH-017</span></div>
+  </div>
+  <div class="page-card">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h4>用户协议页</h4><span class="platform-badge mobile">Mobile</span></div>
+    <div class="route">mobile: TermsScreen</div>
+    <div class="features"><span class="ftag">F-AUTH-008</span></div>
+  </div>
+  <div class="page-card">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h4>隐私政策页</h4><span class="platform-badge mobile">Mobile</span></div>
+    <div class="route">mobile: PrivacyScreen</div>
+    <div class="features"><span class="ftag">F-AUTH-009</span></div>
+  </div>
+  <div class="page-card">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h4>修改密码页</h4><span class="platform-badge mobile">Mobile</span></div>
+    <div class="route">mobile: ChangePasswordScreen</div>
+    <div class="features"><span class="ftag">F-AUTH-024</span></div>
+  </div>
+  <div class="page-card">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h4>账号注销页</h4><span class="platform-badge mobile">Mobile</span></div>
+    <div class="route">mobile: DeleteAccountScreen</div>
+    <div class="features"><span class="ftag">F-AUTH-023</span></div>
+  </div>
+  <div class="page-card">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h4>首页（占位）</h4><span class="platform-badge mobile">Mobile</span></div>
+    <div class="route">mobile: HomeScreen (placeholder)</div>
+    <div class="features"><span class="ftag">F-CORE-001</span></div>
+  </div>
+</div>
+
+</div><!-- end section 4 -->
+
+<!-- ========== 部署方案 ========== -->
+<div class="section">
+<div class="section-title"><div class="icon">5</div> 部署方案</div>
+
+<div class="tbl-panel">
+  <table>
+    <thead><tr><th>组件</th><th>技术</th><th>部署方式</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><b>后端</b></td><td>Java 21 + Spring Boot 3</td><td>Docker 容器 (ECS)</td><td>temurin:21-jre-alpine，Flyway 迁移管理</td></tr>
+      <tr><td><b>Web 前端</b></td><td>Next.js 14 App Router</td><td>Docker 容器 (ECS + Nginx)</td><td>node:20-alpine，Server Component 优先</td></tr>
+      <tr><td><b>移动端</b></td><td>React Native 0.73 + Expo</td><td>App Store / Google Play</td><td>Hermes 引擎，CodePush 热更新</td></tr>
+      <tr><td><b>数据库</b></td><td>MySQL 8.0</td><td>Docker 容器（数据卷持久化）</td><td>非 RDS，本机容器运行，Flyway 版本化迁移</td></tr>
+      <tr><td><b>缓存</b></td><td>Redis 7</td><td>Docker 容器</td><td>Token 黑名单 + 限频计数器 + 注册信息暂存</td></tr>
+      <tr><td><b>文件存储</b></td><td>阿里云 OSS</td><td>托管服务</td><td>用户头像上传，生成预签名 URL</td></tr>
+      <tr><td><b>反向代理</b></td><td>Nginx</td><td>Docker 容器</td><td>SSL 终止 + /api 路由 + Web 静态资源</td></tr>
+      <tr><td><b>编排</b></td><td>Docker Compose</td><td>ECS 实例</td><td>dev / staging / production 三套配置，非 ACK</td></tr>
+      <tr><td><b>镜像仓库</b></td><td>阿里云 ACR</td><td>托管服务</td><td>CI 构建推送，部署时拉取指定 Tag</td></tr>
+    </tbody>
+  </table>
+</div>
+
+</div><!-- end section 5 -->
+
+<!-- Footer -->
+<div class="report-footer">
+  Looply 用户系统 · 技术方案 · RUN-20260331-001 · 由 AI Pipeline 自动生成
+</div>
+
+</div>
+
+<script>
+(function() {
+  /* ========== DATA ========== */
+  var RELATIONS = [
+    ['account','credential','1n','1:N'],
+    ['account','oauth','1n','1:N'],
+    ['account','profile','11','1:1'],
+    ['account','device','1n','1:N'],
+    ['account','session','1n','1:N'],
+    ['account','loginlog','1n','1:N'],
+    ['account','vcode','1n','1:N'],
+    ['account','risk','1n','1:N'],
+    ['account','audit','1n','1:N'],
+    ['account','consent','1n','1:N'],
+    ['device','session','1n','1:N'],
+    ['device','loginlog','1n','1:N']
+  ];
+  var COLORS = {'1n':'#7C3AED','11':'#3B82F6','logic':'#F59E0B'};
+  var NS = 'http://www.w3.org/2000/svg';
+  var dragMode = false;
+
+  /* ========== COLLAPSE / EXPAND ========== */
+  function toggleCollapse(entity) {
+    entity.classList.toggle('collapsed');
+    scheduleRedraw();
+  }
+  document.addEventListener('click', function(e) {
+    var head = e.target.closest('.er-head');
+    if (!head) return;
+    var entity = head.closest('.er-entity');
+    if (!entity || entity.classList.contains('dragging')) return;
+    if (dragMode && !e.target.closest('.er-toggle')) return;
+    toggleCollapse(entity);
+  });
+
+  document.getElementById('btnExpandAll').addEventListener('click', function() {
+    document.querySelectorAll('.er-entity.collapsed').forEach(function(el) {
+      el.classList.remove('collapsed');
+    });
+    scheduleRedraw();
+  });
+  document.getElementById('btnCollapseAll').addEventListener('click', function() {
+    document.querySelectorAll('.er-entity').forEach(function(el) {
+      el.classList.add('collapsed');
+    });
+    scheduleRedraw();
+  });
+
+  /* ========== DRAG MODE ========== */
+  var layout = document.getElementById('erLayout');
+  var btnDrag = document.getElementById('btnToggleDrag');
+  var btnReset = document.getElementById('btnResetLayout');
+
+  function enterDragMode() {
+    if (dragMode) return;
+    dragMode = true;
+    btnDrag.classList.add('active');
+    var entities = layout.querySelectorAll('.er-entity');
+    var positions = [];
+    entities.forEach(function(el) {
+      var r = el.getBoundingClientRect();
+      var lr = layout.getBoundingClientRect();
+      positions.push({ el: el, x: r.left - lr.left, y: r.top - lr.top });
+    });
+    var layoutRect = layout.getBoundingClientRect();
+    layout.style.height = layoutRect.height + 'px';
+    layout.classList.add('drag-mode');
+    positions.forEach(function(p) {
+      p.el.style.left = p.x + 'px';
+      p.el.style.top = p.y + 'px';
+      p.el.classList.add('draggable');
+    });
+    scheduleRedraw();
+  }
+
+  function exitDragMode() {
+    if (!dragMode) return;
+    dragMode = false;
+    btnDrag.classList.remove('active');
+    layout.classList.remove('drag-mode');
+    layout.style.height = '';
+    layout.querySelectorAll('.er-entity').forEach(function(el) {
+      el.style.left = '';
+      el.style.top = '';
+      el.classList.remove('draggable');
+    });
+    scheduleRedraw();
+  }
+
+  btnDrag.addEventListener('click', function() {
+    dragMode ? exitDragMode() : enterDragMode();
+  });
+  btnReset.addEventListener('click', function() {
+    exitDragMode();
+    document.querySelectorAll('.er-entity.collapsed').forEach(function(el) {
+      el.classList.remove('collapsed');
+    });
+    scheduleRedraw();
+  });
+
+  /* ========== DRAG HANDLING ========== */
+  var dragEl = null, dragStartX = 0, dragStartY = 0, elStartX = 0, elStartY = 0;
+
+  function onPointerDown(e) {
+    if (!dragMode) return;
+    var head = e.target.closest('.er-head');
+    if (!head) return;
+    if (e.target.closest('.er-toggle')) return;
+    var entity = head.closest('.er-entity');
+    if (!entity || !entity.classList.contains('draggable')) return;
+    e.preventDefault();
+    dragEl = entity;
+    dragEl.classList.add('dragging');
+    dragStartX = e.clientX; dragStartY = e.clientY;
+    elStartX = parseFloat(dragEl.style.left) || 0;
+    elStartY = parseFloat(dragEl.style.top) || 0;
+    document.addEventListener('pointermove', onPointerMove);
+    document.addEventListener('pointerup', onPointerUp);
+  }
+  function onPointerMove(e) {
+    if (!dragEl) return;
+    var dx = e.clientX - dragStartX, dy = e.clientY - dragStartY;
+    dragEl.style.left = (elStartX + dx) + 'px';
+    dragEl.style.top  = (elStartY + dy) + 'px';
+    var bot = parseFloat(dragEl.style.top) + dragEl.offsetHeight + 20;
+    if (bot > parseFloat(layout.style.height)) layout.style.height = bot + 'px';
+    drawLines();
+  }
+  function onPointerUp() {
+    if (dragEl) dragEl.classList.remove('dragging');
+    dragEl = null;
+    document.removeEventListener('pointermove', onPointerMove);
+    document.removeEventListener('pointerup', onPointerUp);
+  }
+  document.addEventListener('pointerdown', onPointerDown);
+
+  /* ========== SVG LINE DRAWING ========== */
+  function rect(el, box) {
+    var r = el.getBoundingClientRect();
+    return {
+      cx: r.left-box.left+r.width/2, cy: r.top-box.top+r.height/2,
+      t: r.top-box.top, b: r.top-box.top+r.height,
+      l: r.left-box.left, r: r.left-box.left+r.width,
+      w: r.width, h: r.height
+    };
+  }
+  function port(a, b, idx, total) {
+    var dx=b.cx-a.cx, dy=b.cy-a.cy, side;
+    if (Math.abs(dx)*a.h > Math.abs(dy)*a.w) side = dx>0?'r':'l';
+    else side = dy>0?'b':'t';
+    var spread=0.6, frac = total<=1 ? 0.5 : (0.5-spread/2)+spread*idx/(total-1);
+    var x,y;
+    if (side==='r'){x=a.r;y=a.t+a.h*frac;}
+    else if(side==='l'){x=a.l;y=a.t+a.h*frac;}
+    else if(side==='b'){x=a.l+a.w*frac;y=a.b;}
+    else{x=a.l+a.w*frac;y=a.t;}
+    return {x:x,y:y,side:side};
+  }
+
+  function drawLines() {
+    var wrap=document.getElementById('erDiagram'), svg=document.getElementById('erSvg');
+    if(!wrap||!svg) return;
+    var old=svg.querySelectorAll('path,text,rect.lbl-bg');
+    for(var i=0;i<old.length;i++) old[i].remove();
+    var box=wrap.getBoundingClientRect();
+    svg.setAttribute('width',box.width); svg.setAttribute('height',box.height);
+    svg.style.width=box.width+'px'; svg.style.height=box.height+'px';
+
+    var els={}, nodes=wrap.querySelectorAll('[data-entity]');
+    for(var i=0;i<nodes.length;i++) els[nodes[i].dataset.entity]=nodes[i];
+    var rects={}; for(var k in els) rects[k]=rect(els[k],box);
+
+    /* Pass 1 — determine sides */
+    var edgeSides=RELATIONS.map(function(rel){
+      var a=rects[rel[0]],b=rects[rel[1]]; if(!a||!b)return null;
+      var dx=b.cx-a.cx,dy=b.cy-a.cy;
+      var fs=Math.abs(dx)*a.h>Math.abs(dy)*a.w?(dx>0?'r':'l'):(dy>0?'b':'t');
+      dx=a.cx-b.cx;dy=a.cy-b.cy;
+      var ts=Math.abs(dx)*b.h>Math.abs(dy)*b.w?(dx>0?'r':'l'):(dy>0?'b':'t');
+      return {fromSide:fs,toSide:ts};
+    });
+    var portCount={}, portIdx={};
+    function key(e,s){return e+':'+s;}
+    RELATIONS.forEach(function(rel,i){
+      if(!edgeSides[i])return;
+      var k1=key(rel[0],edgeSides[i].fromSide), k2=key(rel[1],edgeSides[i].toSide);
+      portCount[k1]=(portCount[k1]||0)+1; portCount[k2]=(portCount[k2]||0)+1;
+    });
+
+    /* Pass 2 — draw */
+    RELATIONS.forEach(function(rel,i){
+      if(!edgeSides[i])return;
+      var a=rects[rel[0]],b=rects[rel[1]],type=rel[2],label=rel[3],color=COLORS[type];
+      var k1=key(rel[0],edgeSides[i].fromSide), k2=key(rel[1],edgeSides[i].toSide);
+      portIdx[k1]=portIdx[k1]||0; portIdx[k2]=portIdx[k2]||0;
+      var p1=port(a,b,portIdx[k1]++,portCount[k1]);
+      var p2=port(b,a,portIdx[k2]++,portCount[k2]);
+
+      var pull=Math.min(60,Math.max(20,Math.abs(p2.x-p1.x)*0.35+Math.abs(p2.y-p1.y)*0.35));
+      var cx1=p1.x,cy1=p1.y,cx2=p2.x,cy2=p2.y;
+      if(p1.side==='r')cx1+=pull;else if(p1.side==='l')cx1-=pull;
+      else if(p1.side==='b')cy1+=pull;else cy1-=pull;
+      if(p2.side==='r')cx2+=pull;else if(p2.side==='l')cx2-=pull;
+      else if(p2.side==='b')cy2+=pull;else cy2-=pull;
+
+      var path=document.createElementNS(NS,'path');
+      path.setAttribute('d','M'+p1.x+','+p1.y+' C'+cx1+','+cy1+' '+cx2+','+cy2+' '+p2.x+','+p2.y);
+      path.setAttribute('fill','none'); path.setAttribute('stroke',color);
+      path.setAttribute('stroke-width',type==='logic'?'1':'1.5');
+      if(type==='logic')path.setAttribute('stroke-dasharray','4,3');
+      path.setAttribute('marker-start','url(#dot-'+type+')');
+      path.setAttribute('marker-end','url(#arrow-'+type+')');
+      path.setAttribute('opacity','0.55');
+      svg.appendChild(path);
+
+      var mx=0.125*p1.x+0.375*cx1+0.375*cx2+0.125*p2.x;
+      var my=0.125*p1.y+0.375*cy1+0.375*cy2+0.125*p2.y;
+      var bg=document.createElementNS(NS,'rect');
+      bg.setAttribute('x',mx-10);bg.setAttribute('y',my-7);
+      bg.setAttribute('width',20);bg.setAttribute('height',12);bg.setAttribute('rx',3);
+      bg.setAttribute('class','lbl-bg');bg.setAttribute('fill','#fff');bg.setAttribute('opacity','0.8');
+      svg.appendChild(bg);
+      var txt=document.createElementNS(NS,'text');
+      txt.setAttribute('x',mx);txt.setAttribute('y',my+3);
+      txt.setAttribute('class','er-line-label lbl-'+type);
+      txt.setAttribute('text-anchor','middle');
+      txt.textContent=label;
+      svg.appendChild(txt);
+    });
+  }
+
+  /* ========== SCHEDULING ========== */
+  var timer;
+  function scheduleRedraw(){ clearTimeout(timer); timer=setTimeout(drawLines,100); }
+  window.addEventListener('load',function(){setTimeout(drawLines,150);});
+  window.addEventListener('resize',function(){scheduleRedraw();});
+  if(document.fonts&&document.fonts.ready){
+    document.fonts.ready.then(function(){setTimeout(drawLines,80);});
+  }
+})();
+</script>
+</body>
+</html>

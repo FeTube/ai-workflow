@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1440, initial-scale=1">
+<title>需求分析报告 — RUN-20260331-003</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--purple:#6432FC;--purple-light:#F0EAFF;--purple-dark:#5228C9;--bg:#F8F9FB;--card:#FFFFFF;--text:#1A1A1A;--text2:#6B7280;--text3:#7C8694;--border:#E5E7EB;--red:#EF4444;--red-bg:#FEF2F2;--orange:#F59E0B;--orange-bg:#FFFBEB;--green:#22C55E;--green-bg:#F0FDF4;--blue:#3B82F6;--blue-bg:#EFF6FF;--radius:12px;--shadow:0 1px 3px rgba(0,0,0,.08)}
+@media(prefers-color-scheme:dark){:root{--bg:#0F1117;--card:#1A1D2E;--text:#E5E7EB;--text2:#9CA3AF;--text3:#6B7280;--border:#2D3348;--purple-light:#1E1640;--red-bg:#1C1012;--orange-bg:#1C1A0F;--green-bg:#0F1C14;--blue-bg:#0F1520;--shadow:0 1px 3px rgba(0,0,0,.3)}}
+body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased}
+.container{max-width:1360px;margin:0 auto;padding:0 40px}
+/* Dashboard */
+.dashboard{background:linear-gradient(135deg,#6432FC 0%,#8B5CF6 50%,#A78BFA 100%);color:#fff;padding:48px 0 36px}
+.dashboard h1{font-size:28px;font-weight:700;margin-bottom:8px;letter-spacing:-0.5px}
+.dashboard .meta{font-size:13px;opacity:.85;margin-bottom:28px}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+.stat-card{background:rgba(255,255,255,.15);backdrop-filter:blur(10px);border-radius:var(--radius);padding:20px;text-align:center;transition:transform .2s}
+.stat-card:hover{transform:translateY(-2px);background:rgba(255,255,255,.22)}
+.stat-card .value{font-size:32px;font-weight:700}
+.stat-card .label{font-size:13px;opacity:.85;margin-top:4px}
+/* Sections */
+.section{padding:32px 0}
+.section-title{font-size:20px;font-weight:700;margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid var(--purple)}
+/* Two column */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+@media(max-width:1024px){.two-col{grid-template-columns:1fr}}
+/* Coverage */
+.progress-wrap{margin:12px 0 20px}
+.progress-bar{height:12px;background:var(--border);border-radius:6px;overflow:hidden}
+.progress-fill{height:100%;border-radius:6px;transition:width .6s ease-out}
+.progress-fill.green{background:linear-gradient(90deg,#22C55E,#4ADE80)}
+.progress-fill.orange{background:linear-gradient(90deg,#F59E0B,#FBBF24)}
+.progress-fill.red{background:linear-gradient(90deg,#EF4444,#F87171)}
+.progress-pct{font-size:12px;color:var(--text2);text-align:right;margin-top:4px}
+.module-table{width:100%;border-collapse:collapse;font-size:13px}
+.module-table th{background:var(--purple-light);color:var(--purple);padding:10px 12px;text-align:left;font-weight:600}
+.module-table td{padding:10px 12px;border-bottom:1px solid var(--border)}
+.module-table tr:hover{background:var(--purple-light)}
+/* Conflicts */
+.conflict-card{background:var(--card);border-radius:var(--radius);padding:16px 16px 16px 20px;margin-bottom:12px;border-left:4px solid;box-shadow:var(--shadow);transition:transform .15s}
+.conflict-card:hover{transform:translateX(2px)}
+.conflict-card.critical{border-color:var(--red)}
+.conflict-card.warning{border-color:var(--orange)}
+.conflict-card.info{border-color:var(--blue)}
+.conflict-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.conflict-type{font-weight:600;font-size:14px}
+.badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px}
+.badge.critical{background:var(--red-bg);color:var(--red)}
+.badge.warning{background:var(--orange-bg);color:var(--orange)}
+.badge.info{background:var(--blue-bg);color:var(--blue)}
+.conflict-desc{font-size:13px;color:var(--text2);line-height:1.5}
+.conflict-items{margin-top:6px;display:flex;flex-wrap:wrap;gap:4px}
+.conflict-items .chip{font-size:11px;background:var(--bg);color:var(--text3);padding:2px 8px;border-radius:6px}
+/* Features */
+.filter-bar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center}
+.filter-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--card);cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);transition:all .2s}
+.filter-btn.active,.filter-btn:hover{background:var(--purple);color:#fff;border-color:var(--purple)}
+.priority-tags{display:flex;gap:8px;margin-bottom:16px}
+.p-tag{font-size:12px;font-weight:600;padding:4px 10px;border-radius:8px}
+.p-tag.P0{background:var(--red-bg);color:var(--red)}
+.p-tag.P1{background:var(--orange-bg);color:var(--orange)}
+.p-tag.P2{background:var(--blue-bg);color:var(--blue)}
+.search-box{padding:8px 14px;border:1px solid var(--border);border-radius:8px;font-size:13px;width:240px;background:var(--card);color:var(--text);outline:none;transition:border-color .2s}
+.search-box:focus{border-color:var(--purple)}
+.feature-card{background:var(--card);border-radius:var(--radius);margin-bottom:10px;box-shadow:var(--shadow);overflow:hidden}
+.feature-header{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;user-select:none;transition:background .15s}
+.feature-header:hover{background:var(--purple-light)}
+.feature-id{font-size:11px;font-weight:700;background:var(--purple-light);color:var(--purple);padding:3px 8px;border-radius:6px;white-space:nowrap}
+.feature-title{flex:1;font-weight:600;font-size:14px}
+.feature-priority{font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px}
+.feature-complexity{font-size:11px;color:var(--text3);margin-left:4px;font-weight:500}
+.feature-arrow{transition:transform .2s;color:var(--text3);font-size:12px}
+.feature-arrow.open{transform:rotate(90deg)}
+.feature-body{display:none;padding:0 18px 16px;border-top:1px solid var(--border)}
+.feature-body.open{display:block}
+.feature-body .desc{font-size:13px;color:var(--text2);margin:12px 0;line-height:1.6}
+.feature-body .pages-label{font-size:12px;font-weight:600;color:var(--text3);margin-bottom:6px}
+.page-chip{display:inline-block;font-size:11px;background:var(--purple-light);color:var(--purple);padding:3px 10px;border-radius:6px;margin:2px 4px 2px 0}
+.ac-list{margin-top:12px;padding-left:20px;font-size:13px;color:var(--text2)}
+.ac-list li{margin-bottom:4px;line-height:1.5}
+/* User Stories */
+.story-table{width:100%;border-collapse:collapse;font-size:13px}
+.story-table th{background:var(--purple-light);color:var(--purple);padding:10px 14px;text-align:left;font-weight:600}
+.story-table td{padding:10px 14px;border-bottom:1px solid var(--border)}
+.story-table tr:hover{background:var(--purple-light)}
+/* Tokens */
+.token-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.token-card{background:var(--card);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow)}
+.token-card .name{font-size:12px;font-weight:600;color:var(--text3);margin-bottom:6px}
+.token-card .val{font-size:13px;font-weight:600;font-family:'SF Mono',Menlo,Consolas,monospace}
+.color-swatch{width:36px;height:36px;border-radius:8px;margin-bottom:8px;border:1px solid var(--border)}
+/* Design Pages */
+.page-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.page-item{background:var(--card);border-radius:var(--radius);padding:12px 16px;box-shadow:var(--shadow);border-left:4px solid var(--purple);font-size:13px;font-weight:500;transition:transform .15s}
+.page-item:hover{transform:translateY(-1px)}
+.page-item.h5{border-left-color:var(--green)}
+.page-size{font-size:11px;color:var(--text3);margin-top:4px}
+.empty-msg{color:var(--text3);font-size:13px;font-style:italic;padding:20px 0}
+/* Footer */
+.footer{text-align:center;padding:32px;font-size:12px;color:var(--text3);border-top:1px solid var(--border);margin-top:16px}
+/* Responsive */
+@media(max-width:1024px){.container{padding:0 24px}.stats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:768px){.container{padding:0 16px}.stats{grid-template-columns:repeat(2,1fr)}.two-col{grid-template-columns:1fr}.story-table{font-size:12px}.filter-bar{flex-direction:column;align-items:stretch}.search-box{width:100%}}
+</style>
+</head>
+<body>
+
+<div class="dashboard">
+<div class="container">
+<h1>需求分析报告</h1>
+<div class="meta" id="meta"></div>
+<div class="stats" id="stats"></div>
+</div>
+</div>
+
+<div class="container">
+
+<!-- Coverage + Conflicts -->
+<div class="section">
+<div class="two-col">
+<div>
+<div class="section-title">覆盖度概览</div>
+<div id="coverage-summary"></div>
+<div class="progress-wrap">
+<div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+<div class="progress-pct" id="progress-pct"></div>
+</div>
+<table class="module-table" id="module-table">
+<thead><tr><th>模块</th><th>P0</th><th>P1</th><th>P2</th><th>功能点</th><th>有设计页</th><th>覆盖度</th></tr></thead>
+<tbody></tbody>
+</table>
+<div id="unmatched-list"></div>
+</div>
+<div>
+<div class="section-title">冲突与差异 <span class="badge warning" style="margin-left:8px" id="conflict-badge"></span></div>
+<div id="conflicts"></div>
+</div>
+</div>
+</div>
+
+<!-- Features -->
+<div class="section">
+<div class="section-title">功能点清单</div>
+<div class="priority-tags" id="priority-tags"></div>
+<div class="filter-bar">
+<button class="filter-btn active" onclick="filterModule('all')">全部</button>
+<div id="module-filters" style="display:contents"></div>
+<input class="search-box" type="text" placeholder="搜索功能点（ID / 标题 / 描述）..." oninput="searchFeatures(this.value)">
+</div>
+<div id="features"></div>
+</div>
+
+<!-- User Stories -->
+<div class="section">
+<div class="section-title">用户故事</div>
+<div style="overflow-x:auto">
+<table class="story-table"><thead><tr><th>编号</th><th>作为...</th><th>我希望...</th><th>以便...</th></tr></thead><tbody id="stories"></tbody></table>
+</div>
+</div>
+
+<!-- Design Tokens -->
+<div class="section">
+<div class="section-title">Design Token 统计</div>
+<div id="tokens-summary" style="margin-bottom:16px;font-size:13px;color:var(--text2)"></div>
+<h3 style="font-size:15px;font-weight:600;margin-bottom:12px;color:var(--text)">颜色变量</h3>
+<div class="token-grid" id="color-tokens"></div>
+<div style="margin-top:24px">
+<h3 style="font-size:15px;font-weight:600;margin-bottom:12px;color:var(--text)">圆角</h3>
+<div class="token-grid" id="radius-tokens"></div>
+</div>
+<div style="margin-top:24px">
+<h3 style="font-size:15px;font-weight:600;margin-bottom:12px;color:var(--text)">间距</h3>
+<div class="token-grid" id="spacing-tokens"></div>
+</div>
+</div>
+
+<!-- Design Pages -->
+<div class="section">
+<div class="two-col">
+<div>
+<div class="section-title" style="border-color:var(--purple)">PC 端设计页面</div>
+<div class="page-grid" id="pc-pages"></div>
+</div>
+<div>
+<div class="section-title" style="border-color:var(--green)">H5 端设计页面</div>
+<div class="page-grid" id="h5-pages"></div>
+</div>
+</div>
+</div>
+
+</div>
+
+<div class="footer">
+由 AI Pipeline 自动生成 &middot; parse-requirements 阶段 &middot; RUN-20260331-003
+</div>
+
+<script>
+const DATA = {"run_id":"RUN-20260331-003","generated_at":"2026-03-31T18:30:00+08:00","requirement_name":"Looply 用户系统","requirement_version":"V2.2 MVP","metrics":{"feature_count":32,"user_story_count":12,"page_count":40,"design_token_count":25,"coverage":96,"conflict_count":9,"conflicts_by_severity":{"critical":0,"warning":4,"info":5}},"features":[{"id":"F-AUTH-001","title":"Email Registration","title_zh":"邮箱注册","description":"User creates a Looply account using email and password, with email verification code","description_zh":"用户通过邮箱地址和密码创建 Looply 账号，提交后发送 6 位验证码到邮箱，验证通过后完成注册并自动登录。包含邮箱格式校验、密码强度校验、协议勾选、注册限频和风控检测。","priority":"P0","complexity":"L","linkedPages":["Screen/Register","H5/Register","Screen/VerifyCode","H5/VerifyCode"],"acceptanceCriteria":["User can register with valid email and password"],"acceptanceCriteria_zh":["用户输入合法邮箱和密码后可成功注册","邮箱格式错误时失焦提示「Please enter a valid email address」","密码不符合规则时实时提示具体不符合项","未勾选协议时「Create account」按钮置灰","邮箱已注册时提示「This email is already registered」","注册限频触发时提示「Too many attempts, please try again later」","验证码输入正确后自动登录跳转首页"]},{"id":"F-AUTH-002","title":"OAuth Quick Registration (Google/Apple/Facebook)","title_zh":"OAuth 快捷注册（Google / Apple / Facebook）","description":"User creates a Looply account via third-party OAuth providers","description_zh":"用户通过 Google / Apple / Facebook 第三方账号一键注册 Looply 账号。系统执行风控检测后跳转 OAuth 授权页，回调后根据 provider_uid 判断新老用户，新用户自动创建账号并跳转补充信息页。支持 Apple Hide My Email 和 Facebook 无邮箱场景。","priority":"P0","complexity":"L","linkedPages":["Screen/Register","H5/Register","Screen/OAuthSupplementary","H5/OAuthSupplementary"],"acceptanceCriteria":["User can register via Google/Apple/Facebook"],"acceptanceCriteria_zh":["点击「Continue with Google/Apple/Facebook」后跳转至对应授权页","授权成功后新用户自动创建账号并跳转 OAuth 补充信息页","已绑定用户直接登录跳转首页","用户取消授权返回注册页无提示","Provider 不可用时提示「{Provider} sign-in is temporarily unavailable」","Apple relay 邮箱不写入凭证表，Facebook 无邮箱允许注册"]},{"id":"F-AUTH-003","title":"Unified Registration Entry","title_zh":"统一注册入口","description":"Registration page integrates email and OAuth registration options","description_zh":"注册页面提供统一入口，整合邮箱注册表单和三方快捷注册按钮。页面包含标题「Create your account」、邮箱/密码输入框、「Create account」主按钮、分隔线「or」、三个 OAuth 按钮、协议勾选和底部切换链接。预留 Identifier-First 统一入口模式。","priority":"P0","complexity":"M","linkedPages":["Screen/Register","H5/Register"],"acceptanceCriteria":["Registration page shows both email form and OAuth buttons"],"acceptanceCriteria_zh":["页面展示邮箱注册表单和三方登录按钮","分隔线「or」正确显示","底部「Already have an account? Sign in」可跳转登录页"]},{"id":"F-AUTH-004","title":"Password Setup Rules","title_zh":"密码设置规则","description":"Password must meet security requirements during registration","description_zh":"用户注册时设置密码须满足安全性要求：至少 8 位字符，包含大写字母、小写字母和数字。密码输入框提供显示/隐藏切换，框下显示规则提示文案。","priority":"P0","complexity":"S","linkedPages":["Screen/Register","H5/Register"],"acceptanceCriteria":["Password validation enforces all rules"],"acceptanceCriteria_zh":["密码少于 8 位时提示不符合","缺少大写/小写/数字时分别提示","密码显示/隐藏切换正常工作"]},{"id":"F-AUTH-005","title":"Terms & Privacy Agreement","title_zh":"协议承接（ToS + Privacy Policy）","description":"Registration flow includes Terms of Service and Privacy Policy confirmation","description_zh":"注册流程中嵌入服务条款和隐私政策确认环节。注册页为主动勾选（opt-in），不可默认勾选。登录页底部展示被动文案（无复选框）。记录用户同意的时间戳和协议版本号。「Terms of Service」和「Privacy Policy」为可点击链接。","priority":"P0","complexity":"M","linkedPages":["Screen/Register","H5/Register","Screen/Login","H5/Login"],"acceptanceCriteria":["User must actively check agreement before registration"],"acceptanceCriteria_zh":["注册页协议复选框默认未勾选","未勾选时「Create account」按钮置灰","「Terms of Service」和「Privacy Policy」链接可点击跳转","登录页底部展示协议文案（无复选框）"]},{"id":"F-AUTH-006","title":"Terms of Service Page","title_zh":"服务条款页面","description":"Display full Terms of Service content","description_zh":"展示 Looply 平台服务条款完整内容。顶部导航栏含 Logo 和「Back」按钮，内容区域为长文本支持滚动，显示最后更新日期。MVP 阶段为前端静态页面，无需登录即可访问。","priority":"P1","complexity":"S","linkedPages":["Screen/TermsOfService","H5/TermsOfService"],"acceptanceCriteria":["Terms page displays full content and allows navigation back"],"acceptanceCriteria_zh":["页面正确展示服务条款内容","顶部导航栏含 Logo 和「Back」按钮","返回注册页时保留已填写的表单信息"]},{"id":"F-AUTH-007","title":"Privacy Policy Page","title_zh":"隐私政策页面","description":"Display full Privacy Policy content","description_zh":"展示 Looply 平台隐私政策完整内容，告知用户个人数据的收集、使用和保护方式。布局与服务条款页面一致，内容需符合目标市场数据保护法规（GDPR、CCPA 等）。","priority":"P1","complexity":"S","linkedPages":["Screen/PrivacyPolicy","H5/PrivacyPolicy"],"acceptanceCriteria":["Privacy page displays compliant content"],"acceptanceCriteria_zh":["页面正确展示隐私政策内容","返回注册页时保留已填写的表单信息","PC 和 H5 共用同一份内容，仅布局适配"]},{"id":"F-AUTH-008","title":"OAuth Supplementary Info Page","title_zh":"OAuth 补充信息页","description":"Guide OAuth users to complete profile after first registration","description_zh":"OAuth 首次注册用户补充 Display Name 和 Country/Region 信息。页面展示 OAuth 连接状态标签（绿色背景 + Provider 名称 + 邮箱）、表单字段、协议勾选和「Complete Setup」按钮。支持跳过（Skip for now），跳过后在首次下单时再次引导。","priority":"P1","complexity":"M","linkedPages":["Screen/OAuthSupplementary","H5/OAuthSupplementary","H5/OAuthSupplementary-DisabledState"],"acceptanceCriteria":["OAuth users can complete or skip profile supplementation"],"acceptanceCriteria_zh":["OAuth 连接状态正确显示 Provider 和邮箱","Display Name 从 OAuth 返回的 name 预填充","Country 从 IP 自动识别，默认 United States","协议未勾选时「Complete Setup」按钮置灰","「Skip for now」可跳过直接进入首页"]},{"id":"F-AUTH-009","title":"Email Verification Code","title_zh":"邮箱验证码校验","description":"6-digit email verification code for registration and password reset","description_zh":"注册和忘记密码流程共用验证码页面。6 位数字验证码，有效期 10 分钟，一次性使用，连续输错 5 次失效。页面包含 6 位独立输入框、「Verify code」按钮和重发链接。支持自动聚焦、粘贴填充和删除键回退。重发冷却 60 秒，每小时上限 5 次。","priority":"P0","complexity":"M","linkedPages":["Screen/VerifyCode","H5/VerifyCode"],"acceptanceCriteria":["Verification code flow works correctly"],"acceptanceCriteria_zh":["6 位输入框自动聚焦和跳转","支持粘贴完整验证码","验证码错误时提示「Invalid verification code」","过期时提示「Code has expired. Please request a new one.」","重发按钮 60 秒倒计时"]},{"id":"F-AUTH-010","title":"Brand Value Display","title_zh":"品牌价值展示","description":"Brand visual and value proposition on registration/login pages","description_zh":"注册/登录页面左侧（PC 端）展示 Looply 品牌视觉和核心价值主张：全屏背景图（660px 宽）、品牌 Logo（白色透明底）和品牌价值主张文案。H5 端不展示。","priority":"P1","complexity":"S","linkedPages":["Screen/Register","Screen/Login"],"acceptanceCriteria":["Brand panel displays correctly on PC"],"acceptanceCriteria_zh":["PC 端左侧品牌区域固定 660px 宽","展示品牌背景图、Logo 和价值主张","H5 端不展示品牌区域"]},{"id":"F-AUTH-011","title":"Email Password Login","title_zh":"邮箱密码登录","description":"User signs in with registered email and password","description_zh":"用户通过已注册邮箱和密码登录。页面包含标题「Welcome back」、邮箱/密码输入框、Remember me 复选框、「Forgot password?」链接、「Sign in」主按钮、OAuth 按钮和底部切换链接。支持设备指纹采集、风控检测、密码错误锁定（5 次锁 30 分钟）。不暴露邮箱是否存在。","priority":"P0","complexity":"L","linkedPages":["Screen/Login","Screen/Login-PasswordVisible","Screen/Login-ErrorState","Screen/Login-LoadingState","H5/Login","H5/Login-PasswordVisible","H5/Login-ErrorState","H5/Login-LoadingState"],"acceptanceCriteria":["User can login with correct credentials"],"acceptanceCriteria_zh":["输入正确邮箱密码后成功登录跳转首页","邮箱格式错误实时提示","密码错误提示「Incorrect email or password」（不区分邮箱/密码）","连续 5 次错误后锁定 30 分钟并展示锁定提示","密码显示/隐藏切换正常","登录按钮显示 loading 状态"]},{"id":"F-AUTH-012","title":"OAuth Quick Login","title_zh":"OAuth 快捷登录","description":"Existing OAuth users can sign in with one click","description_zh":"已通过第三方注册的用户使用 Google / Apple / Facebook 一键登录。未注册用户自动走注册流程。系统判断 provider_uid 是否已绑定，已绑定直接签发 Token，未绑定走 OAuth 注册流程。","priority":"P0","complexity":"M","linkedPages":["Screen/Login","H5/Login"],"acceptanceCriteria":["OAuth login works for registered users"],"acceptanceCriteria_zh":["已绑定用户点击 OAuth 按钮后直接登录","未绑定用户自动进入注册流程","用户取消授权返回登录页"]},{"id":"F-AUTH-013","title":"Forgot Password","title_zh":"忘记密码","description":"User can reset password via email verification","description_zh":"用户忘记密码时通过邮箱验证身份。页面包含钥匙图标、标题「Forgot password?」、邮箱输入框和「Send reset code」按钮。输入邮箱后发送 6 位验证码，不暴露邮箱是否存在（统一提示）。跳转 VerifyCode 页面校验。","priority":"P0","complexity":"M","linkedPages":["Screen/ForgotPassword","H5/ForgotPassword","Screen/VerifyCode","H5/VerifyCode"],"acceptanceCriteria":["Forgot password flow sends verification code"],"acceptanceCriteria_zh":["输入邮箱后点击「Send reset code」发送验证码","未注册邮箱也返回成功提示（防枚举）","发信限频触发时提示"]},{"id":"F-AUTH-014","title":"Reset Password","title_zh":"重置密码","description":"User sets new password after verification","description_zh":"验证码校验通过后设置新密码。页面包含锁图标、标题「Set new password」、新密码和确认密码输入框、「Reset password」按钮。新密码不能与旧密码相同。重置成功后失效所有旧 Token，写入审计日志，自动跳转登录页。15 分钟内未完成则会话过期。","priority":"P0","complexity":"M","linkedPages":["Screen/ResetPassword","H5/ResetPassword"],"acceptanceCriteria":["Password reset updates credential and invalidates sessions"],"acceptanceCriteria_zh":["新密码须符合密码规则","确认密码不一致时提示「Passwords do not match」","新密码与旧密码相同时提示","重置成功后跳转登录页","15 分钟超时后提示会话过期"]},{"id":"F-AUTH-015","title":"Login State Persistence (JWT)","title_zh":"登录态保持（JWT 双 Token）","description":"JWT-based session management with access and refresh tokens","description_zh":"采用 JWT 双 Token 方案维持登录态。access_token 短期有效（15 分钟）不落库，refresh_token 长期有效存储在服务端。勾选 Remember Me 时 refresh_token 30 天有效期，未勾选为会话级。Cookie 设置 HttpOnly + Secure + SameSite=Lax。","priority":"P0","complexity":"M","linkedPages":["Screen/Login","H5/Login"],"acceptanceCriteria":["Token management works as specified"],"acceptanceCriteria_zh":["勾选 Remember Me 后 refresh_token 30 天有效","未勾选时浏览器关闭后失效","Cookie 属性正确设置（HttpOnly、Secure、SameSite=Lax）","access_token 不落库"]},{"id":"F-AUTH-016","title":"Returning User Login Page","title_zh":"回访用户登录页","description":"Personalized login page for returning users","description_zh":"回访用户（之前勾选 Remember Me 且 Cookie 有效期内但 Token 过期）展示个性化登录页：用户首字母头像（72×72px，紫色背景 #F0EAFF）、「Welcome back, {用户名}」标题、预显示邮箱、无邮箱输入框、无 OAuth 按钮。提供「Not you? Use another account」链接切换标准登录页。","priority":"P1","complexity":"M","linkedPages":["Screen/Login-Remembered","H5/Login-Remembered"],"acceptanceCriteria":["Returning users see personalized login page"],"acceptanceCriteria_zh":["回访用户显示头像和用户名","邮箱已预显示，无需重新输入","密码输入框自动获取焦点","「Use another account」可切换到标准登录页"]},{"id":"F-AUTH-017","title":"Active Logout","title_zh":"主动退出","description":"User-initiated logout with confirmation dialog","description_zh":"用户主动退出登录，弹出确认弹窗（420×260px，圆角 16px），包含「Sign Out」标题、确认文案、「Yes, Sign Out」主按钮和「Cancel」次按钮。确认后清除 Session/Token（含 refresh_token），跳转首页。退出请求失败时前端强制清除本地 Token。","priority":"P0","complexity":"S","linkedPages":["Screen/LogoutModal","H5/LogoutModal"],"acceptanceCriteria":["Logout confirmation and session cleanup works"],"acceptanceCriteria_zh":["点击退出弹出确认弹窗","确认后清除所有 Token 和 Cookie","退出后跳转首页","点击 Cancel 关闭弹窗"]},{"id":"F-AUTH-018","title":"Logout Entry Point","title_zh":"退出入口","description":"Logout button placement in UI","description_zh":"PC 端退出入口位于页面右上角用户头像下拉菜单中的「Sign Out」选项。H5 端退出入口位于「我的」页面底部「Sign Out」按钮。","priority":"P0","complexity":"S","linkedPages":[],"acceptanceCriteria":["Logout entry point is discoverable"],"acceptanceCriteria_zh":["PC 端用户头像下拉菜单包含「Sign Out」","H5 端「我的」页面底部有「Sign Out」按钮"]},{"id":"F-AUTH-019","title":"Post-Logout Redirect Rules","title_zh":"退出跳转规则","description":"Redirect logic after logout based on different scenarios","description_zh":"退出后跳转规则：主动退出跳转首页；Session 过期跳转首页并显示「Session expired」提示；安全强制退出跳转首页并显示对应提示；协议版本更新拒绝同意强制退出。","priority":"P0","complexity":"S","linkedPages":[],"acceptanceCriteria":["Correct redirect after various logout scenarios"],"acceptanceCriteria_zh":["主动退出后跳转首页","Session 过期后跳转首页并显示提示","安全强制退出跳转首页并显示提示"]},{"id":"F-AUTH-020","title":"Logout Feedback","title_zh":"退出反馈","description":"User feedback throughout logout flow","description_zh":"退出操作全流程有明确用户反馈：点击退出弹出确认弹窗，确认退出中按钮显示 loading 状态，退出成功跳转首页，退出失败 Toast 提示「Sign out failed, please try again」。","priority":"P1","complexity":"S","linkedPages":["Screen/LogoutModal","H5/LogoutModal"],"acceptanceCriteria":["Logout feedback is clear at each step"],"acceptanceCriteria_zh":["确认退出时按钮显示 loading","退出失败时显示 Toast 提示"]},{"id":"F-AUTH-021","title":"Account Deletion","title_zh":"账号注销","description":"Permanent account deletion with identity verification","description_zh":"用户主动发起永久删除账号操作。有密码用户需输入密码验证，仅 OAuth 用户需重新 OAuth 授权验证。页面包含红色警告区域、密码确认输入框和「Permanently delete account」红色按钮。注销后 30 天冷静期可联系客服恢复，数据按保留策略处理（交易记录永久保留脱敏、个人信息 30 天后物理删除）。","priority":"P1","complexity":"L","linkedPages":["Screen/AccountDeletion","H5/AccountDeletion"],"acceptanceCriteria":["Account deletion with verification and cooling period"],"acceptanceCriteria_zh":["有密码用户需输入密码验证","OAuth 用户需重新授权验证","存在活跃订单时按钮置灰并提示","注销后清除所有 Token 和 Cookie","30 天冷静期内可联系客服恢复"]},{"id":"F-AUTH-022","title":"Change Password (Logged In)","title_zh":"密码修改（登录态）","description":"Logged-in user changes current password","description_zh":"已登录用户主动修改密码。需先验证旧密码，新密码不能与旧密码相同。修改成功后除当前 Session 外的所有 Session 立即失效，其他设备需重新登录。仅 OAuth 注册用户（无密码）无此功能入口。","priority":"P1","complexity":"M","linkedPages":["Screen/ChangePassword"],"acceptanceCriteria":["Password change invalidates other sessions"],"acceptanceCriteria_zh":["旧密码验证正确后可输入新密码","新旧密码相同时提示","修改成功后其他设备 Session 失效","仅有密码的用户可见此功能"]},{"id":"F-AUTH-023","title":"Token Refresh","title_zh":"Token 刷新","description":"Auto-refresh access_token using refresh_token","description_zh":"access_token 过期时自动使用 refresh_token 换取新 access_token，实现无感续期。refresh_token 无效或 Session 已吊销时返回 401，前端清除 Token 跳转首页提示重新登录。每次刷新时 refresh_token 滑动续期。","priority":"P0","complexity":"M","linkedPages":[],"acceptanceCriteria":["Token refresh is seamless for active users"],"acceptanceCriteria_zh":["access_token 过期后自动刷新，用户无感","refresh_token 无效时跳转首页提示登录","每次刷新时 refresh_token 滑动续期"]},{"id":"F-AUTH-024","title":"Session Invalidation (Passive Logout)","title_zh":"会话失效（被动退出）","description":"Automatic session handling when login state becomes invalid","description_zh":"登录会话失效时自动处理：Token 自然过期、密码被修改、管理员强制下线、账号被锁定等场景。前端尝试 Token 刷新失败后清除本地存储，跳转首页展示「Session expired. Please sign in again.」提示，登录成功后尝试恢复之前的页面。","priority":"P0","complexity":"S","linkedPages":[],"acceptanceCriteria":["Expired sessions redirect to home with message"],"acceptanceCriteria_zh":["Session 过期后自动跳转首页","显示「Session expired」提示","重新登录后恢复之前访问的页面"]},{"id":"F-AUTH-025","title":"Consent Version Check","title_zh":"协议版本检测","description":"Detect and prompt for updated terms when user visits any page","description_zh":"用户访问任意页面时检测协议版本变化。有更新则弹窗要求确认，同意后写入 ConsentRecord（记录版本号 + 国家），拒绝则强制退出登录。协议版本号存储在服务端配置，前端每次页面加载时调用接口检查（可缓存）。","priority":"P1","complexity":"M","linkedPages":["Screen/ConsentUpdateModal"],"acceptanceCriteria":["Consent update modal appears when terms are updated"],"acceptanceCriteria_zh":["协议版本更新时弹出确认弹窗","同意后正常访问页面","拒绝后强制退出登录"]},{"id":"F-AUTH-026","title":"Risk Control Detection","title_zh":"风控检测规则","description":"Device fingerprint and IP-based risk detection for key auth operations","description_zh":"在注册、登录、OAuth 认证等关键节点执行风控检测。5 项检测规则：设备指纹识别、信任设备判断（前期简化）、IP 地理位置异常（跨州验证码、跨国拦截）、暴力破解检测（同 IP 10分钟内≥10次触发 CAPTCHA 30分钟）、综合风险评估。高风险拦截展示独立页面含客服邮箱链接。","priority":"P0","complexity":"L","linkedPages":["Screen/RiskBlocked","H5/RiskBlocked","Screen/VerifyCode-CrossStateLogin","H5/VerifyCode-CrossStateLogin"],"acceptanceCriteria":["Risk detection rules are enforced"],"acceptanceCriteria_zh":["未知设备创建记录","跨州 IP 触发邮箱验证码","跨国 IP 直接拦截并展示拦截页","同 IP 10 分钟内≥10 次触发 CAPTCHA","拦截页提供客服邮箱链接"]},{"id":"F-AUTH-027","title":"Password Security Validation","title_zh":"密码安全校验","description":"Real-time password strength validation","description_zh":"对用户设置的密码进行安全性校验：最少 8 字符、至少 1 个大写字母、至少 1 个小写字母、至少 1 个数字。实时逐条显示通过/未通过状态，全部通过后提交按钮可点击。应用于注册、忘记密码重置和登录态修改密码三个场景。","priority":"P0","complexity":"S","linkedPages":["Screen/Register","Screen/ResetPassword","Screen/ChangePassword","H5/Register","H5/ResetPassword"],"acceptanceCriteria":["Password rules are validated in real-time"],"acceptanceCriteria_zh":["实时显示每条规则的通过/未通过状态","全部通过后按钮可点击"]},{"id":"F-AUTH-028","title":"Login Attempt Limit","title_zh":"登录限错","description":"Account lockout after failed login attempts","description_zh":"限制登录密码错误次数防止暴力破解。同一账号连续输错 5 次锁定 30 分钟，锁定期间提示「Account locked. Too many failed attempts. Please try again in 30 minutes.」锁定到期自动解锁，登录成功重置计数。基于账号维度（非 IP 维度）。","priority":"P0","complexity":"S","linkedPages":["Screen/Login-ErrorState","H5/Login-ErrorState"],"acceptanceCriteria":["Account locks after 5 failed attempts"],"acceptanceCriteria_zh":["连续 5 次错误后锁定 30 分钟","锁定期间展示锁定提示","锁定到期自动解锁","登录成功重置错误计数"]},{"id":"F-AUTH-029","title":"Registration Rate Limit","title_zh":"注册限频","description":"Rate limiting for registration requests","description_zh":"限制同一 IP / 设备短时间内的注册请求次数。同一 IP 每小时最多注册 5 个账号，同一设备指纹每小时最多 3 个。触发后提示「Too many attempts. Please try again later.」不暴露具体限制规则。","priority":"P0","complexity":"S","linkedPages":[],"acceptanceCriteria":["Registration is rate-limited by IP and device"],"acceptanceCriteria_zh":["同 IP 每小时注册上限 5 个","同设备指纹每小时上限 3 个","触发后显示通用限频提示"]},{"id":"F-AUTH-030","title":"Email Send Rate Limit","title_zh":"发信限频","description":"Rate limiting for verification email sending","description_zh":"限制验证码邮件发送频率。同一邮箱 60 秒内不可重复发送，每小时最多 5 封；同一 IP 每小时最多触发 10 次。发送成功后按钮显示 60 秒倒计时，达到上限后提示「Too many requests. Please try again later.」","priority":"P0","complexity":"S","linkedPages":["Screen/VerifyCode","H5/VerifyCode"],"acceptanceCriteria":["Email sending is rate-limited"],"acceptanceCriteria_zh":["发送后 60 秒倒计时","同邮箱每小时上限 5 次","达到上限后显示限频提示"]},{"id":"F-AUTH-031","title":"Error & Exception Prompts","title_zh":"异常提示体系","description":"Unified error and exception prompt system","description_zh":"统一异常提示体系：账号锁定（顶部 Banner）、登录密码错误（输入框下方）、邮箱格式错误（输入框下方）、网络错误（Toast）、服务端错误（Toast）、注册限频（Toast）、风控拦截（独立页面）、风控异地验证（Banner + 跳转验证码页）、暴力破解 CAPTCHA（弹出验证码）。安全提示不暴露内部逻辑，所有文案需支持多语言。","priority":"P0","complexity":"M","linkedPages":["Screen/Login-ErrorState","H5/Login-ErrorState","Screen/RiskBlocked","H5/RiskBlocked"],"acceptanceCriteria":["All error prompts display correctly"],"acceptanceCriteria_zh":["各类错误使用对应展示方式（Banner/输入框/Toast/独立页面）","安全提示不暴露系统内部逻辑","错误文案使用红色文字 + 错误图标"]},{"id":"F-AUTH-032","title":"Country/Region Selector","title_zh":"国家/地区选择器","description":"Modal dialog for country/region selection","description_zh":"模态弹窗形式的国家选择器，弹窗卡片 480px 宽、圆角 20px。包含标题「Select your country」、搜索框、可滚动国家列表（国旗 emoji + 国家名称）和底部「Confirm」按钮。MVP 支持 7 个国家（US/UK/DE/FR/IT/ES/JP）。搜索为前端本地过滤，默认根据 IP 识别，默认 United States。","priority":"P1","complexity":"M","linkedPages":["Screen/CountrySelector","H5/CountrySelector"],"acceptanceCriteria":["Country selector modal works correctly"],"acceptanceCriteria_zh":["弹窗正确展示 7 个国家","搜索框支持实时过滤","选中项紫色高亮（#F0EAFF）+ 勾选图标","点击 Confirm 确认选择","点击遮罩或关闭按钮取消选择"]}],"userStories":[{"id":"US-001","role":"new user","role_zh":"新用户","action":"register an account via email","action_zh":"通过邮箱注册 Looply 账号","benefit":"start shopping on Looply","benefit_zh":"开始在 Looply 平台购物"},{"id":"US-002","role":"new user","role_zh":"新用户","action":"register via Google/Apple/Facebook with one click","action_zh":"通过 Google / Apple / Facebook 一键注册","benefit":"lower registration barrier","benefit_zh":"降低注册门槛，快速完成注册"},{"id":"US-003","role":"registered user","role_zh":"已注册用户","action":"sign in with email and password","action_zh":"通过邮箱和密码登录","benefit":"access my account and orders","benefit_zh":"访问个人账户和订单"},{"id":"US-004","role":"registered user","role_zh":"已注册用户","action":"sign in via OAuth provider","action_zh":"通过 OAuth 第三方账号一键登录","benefit":"quickly access the platform","benefit_zh":"快速进入平台，无需记忆密码"},{"id":"US-005","role":"user who forgot password","role_zh":"忘记密码的用户","action":"reset password via email verification","action_zh":"通过邮箱验证码重置密码","benefit":"regain access to my account","benefit_zh":"恢复账号访问权限"},{"id":"US-006","role":"logged-in user","role_zh":"已登录用户","action":"securely sign out","action_zh":"安全退出登录","benefit":"protect my account security","benefit_zh":"保护账户安全，防止他人操作"},{"id":"US-007","role":"logged-in user","role_zh":"已登录用户","action":"change my password","action_zh":"修改当前密码","benefit":"enhance account security","benefit_zh":"提升账户安全性"},{"id":"US-008","role":"returning user","role_zh":"回访用户","action":"see a personalized login page","action_zh":"看到个性化的登录页面，无需重新输入邮箱","benefit":"quickly complete login","benefit_zh":"减少操作步骤，快速完成登录"},{"id":"US-009","role":"new OAuth user","role_zh":"OAuth 新注册用户","action":"complete my profile with display name and country","action_zh":"补充显示名称和国家/地区信息","benefit":"have a personalized shopping experience","benefit_zh":"完善购物体验，享受本地化服务"},{"id":"US-010","role":"privacy-conscious user","role_zh":"关注隐私的用户","action":"read Terms of Service and Privacy Policy","action_zh":"查阅服务条款和隐私政策","benefit":"understand how my data is used","benefit_zh":"了解数据收集和使用方式"},{"id":"US-011","role":"departing user","role_zh":"不再使用平台的用户","action":"permanently delete my account","action_zh":"永久删除我的账号","benefit":"ensure my personal data is removed","benefit_zh":"保护个人数据，满足注销诉求"},{"id":"US-012","role":"platform operator","role_zh":"平台运营方","action":"have risk detection capabilities","action_zh":"系统具备风控检测能力","benefit":"prevent malicious registration and brute-force attacks","benefit_zh":"防止恶意注册和暴力破解，保障平台安全"}],"designPages":{"pc":[{"name":"Login","id":"p5U4A","size":"1440×900"},{"name":"Login-PasswordVisible","id":"TsYyp","size":"1440×900"},{"name":"Login-ErrorState","id":"PUITN","size":"1440×900"},{"name":"Login-LoadingState","id":"BYd4G","size":"1440×900"},{"name":"Login-Remembered","id":"UBHRo","size":"1440×900"},{"name":"Register","id":"bDcg4","size":"1440×900"},{"name":"VerifyCode","id":"pFlsk","size":"1440×900"},{"name":"ForgotPassword","id":"3Sgyy","size":"1440×900"},{"name":"ResetPassword","id":"tQCS8","size":"1440×900"},{"name":"PrivacyPolicy","id":"1Qw6T","size":"1440×900"},{"name":"TermsOfService","id":"uuxjK","size":"1440×900"},{"name":"CountrySelector","id":"63pEZ","size":"1440×900"},{"name":"AccountDeletion","id":"BT1XZ","size":"1440×900"},{"name":"OAuthSupplementary","id":"lUUtX","size":"1440×900"},{"name":"LogoutModal","id":"vGYSe","size":"1440×900"},{"name":"ChangePassword","id":"iL81O","size":"1440×900"},{"name":"ConsentUpdateModal","id":"b1Ddi","size":"1440×900"},{"name":"RiskBlocked","id":"8J1O4","size":"1440×900"},{"name":"VerifyCode-CrossStateLogin","id":"eNd9V","size":"1440×900"}],"h5":[{"name":"H5/Login","id":"eRjUU","size":"375×812"},{"name":"H5/Register","id":"pYAT9","size":"375×812"},{"name":"H5/Login-ErrorState","id":"u3fo3","size":"375×812"},{"name":"H5/Login-PasswordVisible","id":"Ofbf6","size":"375×812"},{"name":"H5/Login-LoadingState","id":"8tErG","size":"375×812"},{"name":"H5/Login-Remembered","id":"9qCSd","size":"375×812"},{"name":"H5/Register-DisabledState","id":"SKF6r","size":"375×812"},{"name":"H5/VerifyCode","id":"Bsh7m","size":"375×812"},{"name":"H5/ForgotPassword","id":"USVf3","size":"375×812"},{"name":"H5/ResetPassword","id":"prDsU","size":"375×812"},{"name":"H5/OAuthSupplementary","id":"HLP7x","size":"375×812"},{"name":"H5/OAuthSupplementary-DisabledState","id":"lKuaj","size":"375×812"},{"name":"H5/AccountDeletion","id":"T8Yht","size":"375×812"},{"name":"H5/TermsOfService","id":"OPtZw","size":"375×863"},{"name":"H5/PrivacyPolicy","id":"9FCSW","size":"375×863"},{"name":"H5/CountrySelector","id":"QMdwg","size":"375×812"},{"name":"H5/LogoutModal","id":"ZEXa4","size":"375×812"},{"name":"H5/RiskBlocked","id":"0kYiS","size":"375×812"},{"name":"H5/VerifyCode-CrossStateLogin","id":"gDyGU","size":"375×812"}],"home_pc":[{"name":"方案A - Looply Design System","id":"3kwzX","size":"1440×3058"},{"name":"方案B - Liquid Glass","id":"qO7Yl","size":"1440×3310"},{"name":"方案A-Fixed","id":"kSmej","size":"1440×3221"}],"home_h5":[{"name":"H5/Home","id":"MN2d1","size":"393×852"}]},"conflicts":[{"type":"missing_page","type_zh":"缺失页面","description":"PC 端缺少 Register-DisabledState 设计稿（协议未勾选时「Create account」按钮置灰状态），H5 端已有对应设计稿 H5/Register-DisabledState","affectedItems":["F-AUTH-003","Screen/Register-DisabledState"],"severity":"warning"},{"type":"missing_page","type_zh":"缺失页面","description":"PC 端缺少 OAuthSupplementary-DisabledState 设计稿（协议未勾选时「Complete Setup」按钮置灰状态），H5 端已有对应设计稿 H5/OAuthSupplementary-DisabledState","affectedItems":["F-AUTH-008","Screen/OAuthSupplementary-DisabledState"],"severity":"warning"},{"type":"missing_page","type_zh":"缺失页面","description":"H5 端缺少 ChangePassword 设计稿，PRD 5.1 节明确要求密码修改功能，需确认 H5 端是否支持该功能或补齐设计","affectedItems":["F-AUTH-022","H5/ChangePassword"],"severity":"warning"},{"type":"missing_page","type_zh":"缺失页面","description":"H5 端缺少 ConsentUpdateModal 设计稿，PRD 5.4 节要求协议版本更新弹窗在用户访问任意页面时触发，H5 端同样需要该能力","affectedItems":["F-AUTH-025","H5/ConsentUpdateModal"],"severity":"warning"},{"type":"ambiguous","type_zh":"需求模糊","description":"首页 PC 设计稿采用「方案A-Fixed」，其余方案（方案A、方案B-Liquid Glass）作为备选存档","affectedItems":["Screen/Home-方案A","Screen/Home-方案B","Screen/Home-方案A-Fixed"],"severity":"warning"},{"type":"inconsistency","type_zh":"命名不一致","description":"PRD 7.1 设计稿索引标注 PC 端 RiskBlocked 为「待设计」，但实际 PC 设计稿 looply-登录注册-PC-v2.pen 已包含 RiskBlocked 页面，建议同步更新 PRD","affectedItems":["Screen/RiskBlocked"],"severity":"info"},{"type":"inconsistency","type_zh":"命名不一致","description":"PRD 7.1 设计稿索引标注 PC 端 VerifyCode-CrossStateLogin 为「待设计」，但实际 PC 设计稿已包含该页面，建议同步更新 PRD","affectedItems":["Screen/VerifyCode-CrossStateLogin"],"severity":"info"},{"type":"missing_page","type_zh":"缺失页面","description":"退出入口（PC 端用户头像下拉菜单、H5 端「我的」页面底部按钮）无独立设计稿，建议在后续「个人中心」/「我的」页面设计时补齐","affectedItems":["F-AUTH-018"],"severity":"info"},{"type":"inconsistency","type_zh":"交互不一致","description":"PC 端 Design Token bg-accent 存在双主题值（#FF6B6B 和 #6432FC），H5 端统一使用 #6432FC。需确认 PC 端是否保留主题切换能力或统一为 #6432FC","affectedItems":["Design Token: bg-accent"],"severity":"info"}],"coverage":{"total_features":32,"features_with_design":27,"features_no_design_needed":4,"total_design_pages":40,"pages_linked_to_features":38,"unmatched_pages":["Screen/Home-方案A","Screen/Home-方案B"],"coverage_pct":96},"tokens":{"colors":{"bg-accent":"#6432FC","bg-accent-hover":"#5428E0","bg-accent-dark":"#5228C9","bg-accent-light":"#F0EAFF","bg-primary":"#FFFFFF","bg-secondary":"#F8F9FB","bg-card":"#F6F7F8","bg-input":"#FFFFFF","bg-danger":"#EF4444","bg-error-light":"#FEF2F2","bg-success-light":"#F0FDF4","border-default":"#E5E7EB","border-error":"#EF4444","border-focus":"#6432FC","overlay":"#00000066","text-primary":"#1A1A1A","text-secondary":"#6B7280","text-tertiary":"#7C8694","text-error":"#EF4444","text-link":"#6432FC","text-accent":"#6432FC","text-success":"#22C55E","text-success-dark":"#166534","text-white":"#FFFFFF","google-blue":"#4285F4"},"borderRadius":{"button":"12px","input":"10px","card":"16px","modal":"20px","icon-wrap":"28px","code-input":"10px","country-selector":"20px","banner":"10px"},"spacing":{"button-padding":"14px 24px","input-gap":"6px","section-gap":"16px","page-padding-h5":"56px 16px 32px 16px","modal-padding":"16px","brand-panel-width":"660px"},"typography":{"note":"字体家族需从设计稿文本节点进一步提取"}}};
+
+const MODULE_DEFS = [
+  { key: 'REG', label: '注册', seqs: ['001','002','003','004','005','006','007','008','009','010'] },
+  { key: 'LOGIN', label: '登录', seqs: ['011','012','013','014','015','016'] },
+  { key: 'LOGOUT', label: '退出', seqs: ['017','018','019','020','021'] },
+  { key: 'SESSION', label: '密码与会话', seqs: ['022','023','024','025'] },
+  { key: 'RISK', label: '安全风控', seqs: ['026','027','028','029','030','031'] },
+  { key: 'COMMON', label: '公共', seqs: ['032'] }
+];
+
+function getModule(fid) {
+  var seq = fid.split('-').pop();
+  return MODULE_DEFS.find(function(m) { return m.seqs.indexOf(seq) !== -1; }) || { key: 'OTHER', label: '其他' };
+}
+
+function priorityColor(p) {
+  return p === 'P0' ? 'var(--red)' : p === 'P1' ? 'var(--orange)' : 'var(--blue)';
+}
+function priorityBg(p) {
+  return p === 'P0' ? 'var(--red-bg)' : p === 'P1' ? 'var(--orange-bg)' : 'var(--blue-bg)';
+}
+function severityLabel(s) {
+  return ({critical:'严重',warning:'警告',info:'提示'})[s] || s;
+}
+function coverageColor(pct) {
+  return pct >= 90 ? 'var(--green)' : pct >= 80 ? 'var(--orange)' : 'var(--red)';
+}
+function coverageClass(pct) {
+  return pct >= 90 ? 'green' : pct >= 80 ? 'orange' : 'red';
+}
+
+/* ===== Dashboard ===== */
+document.getElementById('meta').textContent = DATA.run_id + ' \u00b7 ' + DATA.requirement_name + ' ' + DATA.requirement_version + ' \u00b7 ' + new Date(DATA.generated_at).toLocaleDateString('zh-CN', {year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
+
+var statDefs = [
+  ['功能点', DATA.metrics.feature_count],
+  ['用户故事', DATA.metrics.user_story_count],
+  ['设计页面', DATA.metrics.page_count],
+  ['覆盖度', DATA.metrics.coverage + '%'],
+  ['冲突项', DATA.metrics.conflict_count]
+];
+document.getElementById('stats').innerHTML = statDefs.map(function(s) {
+  return '<div class="stat-card"><div class="value">' + s[1] + '</div><div class="label">' + s[0] + '</div></div>';
+}).join('');
+
+/* ===== Coverage ===== */
+var cov = DATA.coverage;
+var covPct = cov.coverage_pct;
+var featuresNoDesign = cov.features_no_design_needed || 0;
+document.getElementById('coverage-summary').innerHTML = '<div style="font-size:14px;font-weight:600">UI 功能点覆盖度 <span style="color:' + coverageColor(covPct) + ';font-size:22px;margin-left:4px">' + covPct + '%</span></div>' +
+  '<div style="font-size:12px;color:var(--text2);margin-top:4px">' + cov.features_with_design + ' / ' + cov.total_features + ' 个功能点有关联设计页' + (featuresNoDesign ? '（其中 ' + featuresNoDesign + ' 个无需独立设计页）' : '') + '</div>';
+
+var pf = document.getElementById('progress-fill');
+pf.style.width = covPct + '%';
+pf.className = 'progress-fill ' + coverageClass(covPct);
+document.getElementById('progress-pct').textContent = cov.features_with_design + ' / ' + cov.total_features + ' 个功能点已覆盖';
+
+/* Module table */
+var tbody = document.querySelector('#module-table tbody');
+MODULE_DEFS.forEach(function(mod) {
+  var feats = DATA.features.filter(function(f) { return mod.seqs.indexOf(f.id.split('-').pop()) !== -1; });
+  var p0 = feats.filter(function(f) { return f.priority === 'P0'; }).length;
+  var p1 = feats.filter(function(f) { return f.priority === 'P1'; }).length;
+  var p2 = feats.filter(function(f) { return f.priority === 'P2'; }).length;
+  var withDesign = feats.filter(function(f) { return f.linkedPages && f.linkedPages.length > 0; }).length;
+  var pct = feats.length ? Math.round(withDesign / feats.length * 100) : 0;
+  var color = coverageColor(pct);
+  tbody.innerHTML += '<tr><td style="font-weight:600">' + mod.label + '</td><td>' + p0 + '</td><td>' + p1 + '</td><td>' + p2 + '</td><td>' + feats.length + '</td><td>' + withDesign + ' / ' + feats.length + '</td><td style="color:' + color + ';font-weight:600">' + pct + '%</td></tr>';
+});
+
+/* Unmatched pages & features without design */
+var unmatchedHtml = '';
+if (cov.unmatched_pages && cov.unmatched_pages.length > 0) {
+  unmatchedHtml += '<div style="margin-top:16px;font-size:13px"><div style="font-weight:600;margin-bottom:8px;color:var(--orange)">未关联功能点的设计页（' + cov.unmatched_pages.length + ' 个）</div>' + cov.unmatched_pages.map(function(p) { return '<span class="page-chip" style="background:var(--orange-bg);color:var(--orange)">' + p + '</span>'; }).join('') + '</div>';
+}
+var noDesign = DATA.features.filter(function(f) { return !f.linkedPages || f.linkedPages.length === 0; });
+if (noDesign.length > 0) {
+  unmatchedHtml += '<div style="margin-top:16px;font-size:13px"><div style="font-weight:600;margin-bottom:8px;color:var(--text3)">无独立设计页的功能点（' + noDesign.length + ' 个）</div>' + noDesign.map(function(f) { return '<span class="page-chip" style="background:var(--bg);color:var(--text2)">' + f.id + ' ' + f.title_zh + '</span>'; }).join('') + '</div>';
+}
+document.getElementById('unmatched-list').innerHTML = unmatchedHtml;
+
+/* ===== Conflicts ===== */
+var severityBadge = DATA.metrics.conflicts_by_severity;
+var badgeText = [];
+if (severityBadge.critical > 0) badgeText.push(severityBadge.critical + ' 严重');
+if (severityBadge.warning > 0) badgeText.push(severityBadge.warning + ' 警告');
+if (severityBadge.info > 0) badgeText.push(severityBadge.info + ' 提示');
+document.getElementById('conflict-badge').textContent = DATA.metrics.conflict_count + ' 项（' + badgeText.join('、') + '）';
+document.getElementById('conflict-badge').className = 'badge ' + (severityBadge.critical > 0 ? 'critical' : severityBadge.warning > 0 ? 'warning' : 'info');
+
+var cf = DATA.conflicts.slice().sort(function(a,b) { var o={critical:0,warning:1,info:2}; return o[a.severity]-o[b.severity]; });
+document.getElementById('conflicts').innerHTML = cf.map(function(c) {
+  var items = (c.affectedItems || []).map(function(i) { return '<span class="chip">' + i + '</span>'; }).join('');
+  return '<div class="conflict-card ' + c.severity + '"><div class="conflict-header"><span class="conflict-type">' + c.type_zh + '</span><span class="badge ' + c.severity + '">' + severityLabel(c.severity) + '</span></div><div class="conflict-desc">' + c.description + '</div>' + (items ? '<div class="conflict-items">' + items + '</div>' : '') + '</div>';
+}).join('');
+
+/* ===== Features ===== */
+var pCounts = {P0:0,P1:0,P2:0};
+DATA.features.forEach(function(f) { pCounts[f.priority] = (pCounts[f.priority]||0) + 1; });
+document.getElementById('priority-tags').innerHTML = ['P0','P1','P2'].map(function(p) { return pCounts[p] ? '<span class="p-tag ' + p + '">' + p + ' \u00b7 ' + pCounts[p] + '</span>' : ''; }).join('');
+
+document.getElementById('module-filters').innerHTML = MODULE_DEFS.map(function(m) {
+  return '<button class="filter-btn" onclick="filterModule(\'' + m.key + '\')">' + m.label + '</button>';
+}).join('');
+
+var currentFilter = 'all';
+var currentSearch = '';
+
+function renderFeatures() {
+  var el = document.getElementById('features');
+  var feats = DATA.features;
+  if (currentFilter !== 'all') {
+    var mod = MODULE_DEFS.find(function(m) { return m.key === currentFilter; });
+    if (mod) feats = feats.filter(function(f) { return mod.seqs.indexOf(f.id.split('-').pop()) !== -1; });
+  }
+  if (currentSearch) {
+    var q = currentSearch.toLowerCase();
+    feats = feats.filter(function(f) {
+      return (f.title_zh||'').toLowerCase().indexOf(q) !== -1 ||
+             (f.description_zh||'').toLowerCase().indexOf(q) !== -1 ||
+             f.id.toLowerCase().indexOf(q) !== -1;
+    });
+  }
+  if (feats.length === 0) {
+    el.innerHTML = '<div class="empty-msg">没有匹配的功能点</div>';
+    return;
+  }
+  el.innerHTML = feats.map(function(f) {
+    var pages = (f.linkedPages||[]).map(function(p) {
+      var isH5 = p.indexOf('H5/') === 0;
+      return '<span class="page-chip" style="' + (isH5 ? 'background:var(--green-bg);color:var(--green)' : '') + '">' + p + '</span>';
+    }).join('');
+    var acs = (f.acceptanceCriteria_zh||[]).map(function(a) { return '<li>' + a + '</li>'; }).join('');
+    return '<div class="feature-card" data-id="' + f.id + '">' +
+      '<div class="feature-header" onclick="toggleFeature(this)">' +
+        '<span class="feature-id">' + f.id + '</span>' +
+        '<span class="feature-title">' + f.title_zh + '</span>' +
+        '<span class="feature-priority" style="background:' + priorityBg(f.priority) + ';color:' + priorityColor(f.priority) + '">' + f.priority + '</span>' +
+        '<span class="feature-complexity">' + f.complexity + '</span>' +
+        '<span class="feature-arrow">\u25B6</span>' +
+      '</div>' +
+      '<div class="feature-body">' +
+        '<div class="desc">' + f.description_zh + '</div>' +
+        (pages ? '<div class="pages-label">关联设计页</div>' + pages : '<div class="pages-label" style="color:var(--text3)">无独立设计页（纯后端 / 内嵌逻辑）</div>') +
+        (acs ? '<div class="pages-label" style="margin-top:12px">验收标准</div><ol class="ac-list">' + acs + '</ol>' : '') +
+      '</div></div>';
+  }).join('');
+}
+
+function filterModule(key) {
+  currentFilter = key;
+  document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+  if (key === 'all') {
+    document.querySelector('.filter-btn').classList.add('active');
+  } else {
+    var mod = MODULE_DEFS.find(function(m) { return m.key === key; });
+    document.querySelectorAll('.filter-btn').forEach(function(b) {
+      if (mod && b.textContent === mod.label) b.classList.add('active');
+    });
+  }
+  renderFeatures();
+}
+
+function searchFeatures(q) { currentSearch = q; renderFeatures(); }
+
+function toggleFeature(header) {
+  var body = header.nextElementSibling;
+  var arrow = header.querySelector('.feature-arrow');
+  body.classList.toggle('open');
+  arrow.classList.toggle('open');
+}
+
+renderFeatures();
+
+/* ===== User Stories ===== */
+document.getElementById('stories').innerHTML = DATA.userStories.map(function(s) {
+  return '<tr><td style="font-weight:600;color:var(--purple);white-space:nowrap">' + s.id + '</td><td>作为 ' + s.role_zh + '</td><td>我希望 ' + s.action_zh + '</td><td>以便 ' + s.benefit_zh + '</td></tr>';
+}).join('');
+
+/* ===== Tokens ===== */
+var colors = DATA.tokens.colors || {};
+var colorKeys = Object.keys(colors);
+var radiusKeys = Object.keys(DATA.tokens.borderRadius || {});
+var spacingKeys = Object.keys(DATA.tokens.spacing || {});
+var totalTokens = colorKeys.length + radiusKeys.length + spacingKeys.length;
+
+document.getElementById('tokens-summary').innerHTML = '共 ' + totalTokens + ' 个 Design Token（' + colorKeys.length + ' 个颜色变量 · ' + radiusKeys.length + ' 个圆角 · ' + spacingKeys.length + ' 个间距）';
+
+document.getElementById('color-tokens').innerHTML = colorKeys.map(function(k) {
+  return '<div class="token-card"><div class="color-swatch" style="background:' + colors[k] + '"></div><div class="name">' + k + '</div><div class="val">' + colors[k] + '</div></div>';
+}).join('');
+
+document.getElementById('radius-tokens').innerHTML = radiusKeys.map(function(k) {
+  var v = DATA.tokens.borderRadius[k];
+  return '<div class="token-card"><div class="name">radius-' + k + '</div><div class="val">' + v + '</div></div>';
+}).join('');
+
+document.getElementById('spacing-tokens').innerHTML = spacingKeys.map(function(k) {
+  var v = DATA.tokens.spacing[k];
+  return '<div class="token-card"><div class="name">spacing-' + k + '</div><div class="val">' + v + '</div></div>';
+}).join('');
+
+/* ===== Design Pages ===== */
+var pcPages = DATA.designPages.pc || [];
+var h5Pages = DATA.designPages.h5 || [];
+var homePc = DATA.designPages.home_pc || [];
+var homeH5 = DATA.designPages.home_h5 || [];
+
+function renderPageItem(p, isH5) {
+  var displayName = p.name;
+  var cls = isH5 ? ' h5' : '';
+  var sizeHtml = p.size ? '<div class="page-size">' + p.size + '</div>' : '';
+  return '<div class="page-item' + cls + '"><strong>' + displayName + '</strong>' + sizeHtml + '</div>';
+}
+
+var pcHtml = pcPages.map(function(p) { return renderPageItem(p, false); }).join('');
+if (homePc.length > 0) {
+  pcHtml += '<div style="margin-top:16px;font-size:13px;font-weight:600;color:var(--text3);margin-bottom:8px">首页方案</div>';
+  pcHtml += homePc.map(function(p) { return renderPageItem(p, false); }).join('');
+}
+document.getElementById('pc-pages').innerHTML = pcHtml || '<div class="empty-msg">暂无 PC 端设计页面</div>';
+
+var h5Html = h5Pages.map(function(p) { return renderPageItem(p, true); }).join('');
+if (homeH5.length > 0) {
+  h5Html += '<div style="margin-top:16px;font-size:13px;font-weight:600;color:var(--text3);margin-bottom:8px">首页方案</div>';
+  h5Html += homeH5.map(function(p) { return renderPageItem(p, true); }).join('');
+}
+document.getElementById('h5-pages').innerHTML = h5Html || '<div class="empty-msg">暂无 H5 端设计页面</div>';
+</script>
+</body>
+</html>

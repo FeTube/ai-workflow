@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>需求分析报告 — RUN-20260330-001</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#F8FAFC;--card:#FFFFFF;--border:#E2E8F0;--text:#1E293B;--text2:#64748B;--primary:#6432FC;--primary-light:#EDE9FE;--p0:#EF4444;--p1:#F59E0B;--p2:#3B82F6;--pass:#22C55E;--fail:#EF4444;--warn:#F59E0B;--shadow:0 1px 3px rgba(0,0,0,.08);--r:8px}
+@media(prefers-color-scheme:dark){:root{--bg:#0F172A;--card:#1E293B;--border:#334155;--text:#F1F5F9;--text2:#94A3B8;--primary-light:#2E1065;--shadow:0 1px 3px rgba(0,0,0,.3)}}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+.dash{background:linear-gradient(135deg,#6432FC,#4F46E5);color:#fff;padding:32px 40px;display:flex;gap:24px;flex-wrap:wrap;align-items:center}
+.dash h1{font-size:22px;font-weight:700}.dash .meta{font-size:12px;opacity:.8;margin-top:2px}
+.stat{background:rgba(255,255,255,.15);backdrop-filter:blur(8px);border-radius:var(--r);padding:12px 20px;text-align:center;min-width:90px}
+.stat .n{font-size:26px;font-weight:700}.stat .l{font-size:10px;text-transform:uppercase;opacity:.75;letter-spacing:.5px}
+.stats{display:flex;gap:12px;margin-left:auto;flex-wrap:wrap}
+.main{max-width:1400px;margin:0 auto;padding:24px 40px}
+@media(max-width:768px){.main{padding:16px}.dash{padding:20px;flex-direction:column}.stats{margin-left:0}}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+@media(max-width:1024px){.grid2{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:20px;overflow:hidden}
+.panel-title{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.panel-title .ic{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:8px 10px;background:var(--bg);font-weight:600;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border)}
+td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+.badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap}
+.bp0{background:#FEE2E2;color:var(--p0)}.bp1{background:#FEF3C7;color:#B45309}.bp2{background:#DBEAFE;color:var(--p2)}
+.bpass{background:#DCFCE7;color:#16A34A}.bwarn{background:#FEF3C7;color:#B45309}.bfail{background:#FEE2E2;color:var(--p0)}
+.binfo{background:#F1F5F9;color:var(--text2)}
+.cov-bar{display:flex;align-items:center;gap:10px;margin:12px 0}
+.cov-track{flex:1;height:10px;background:var(--bg);border-radius:5px;overflow:hidden;border:1px solid var(--border)}
+.cov-fill{height:100%;border-radius:5px;transition:width .3s}
+.cov-num{font-size:20px;font-weight:700;min-width:40px;text-align:right}
+.tag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:11px;margin:2px;background:var(--bg);border:1px solid var(--border);color:var(--text2)}
+.feature-card{padding:14px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;background:var(--card);cursor:pointer;transition:.15s}
+.feature-card:hover{border-color:var(--primary);box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.feature-header{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.feature-id{font-size:11px;font-weight:700;font-family:monospace;background:var(--primary-light);color:var(--primary);padding:2px 6px;border-radius:4px;white-space:nowrap}
+.feature-title{font-weight:600;font-size:14px;flex:1;min-width:200px}
+.feature-body{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:13px;color:var(--text2)}
+.feature-card.open .feature-body{display:block}
+.feature-body p{margin-bottom:8px}.feature-body ul{margin-left:18px;margin-bottom:8px}
+.feature-body li{margin-bottom:2px}
+.chevron{font-size:16px;color:var(--text2);transition:.2s;flex-shrink:0}.feature-card.open .chevron{transform:rotate(90deg)}
+.conflict-card{display:flex;gap:10px;padding:10px 12px;border-radius:6px;border:1px solid var(--border);margin-bottom:8px;background:var(--bg)}
+.conflict-bar{width:5px;border-radius:3px;flex-shrink:0}
+.conflict-bar.warning{background:var(--warn)}.conflict-bar.info{background:var(--text2)}.conflict-bar.critical{background:var(--fail)}
+.conflict-title{font-size:13px;font-weight:600;color:var(--text)}.conflict-desc{font-size:12px;color:var(--text2);margin-top:2px}
+.page-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.page-chip{padding:8px 10px;border-radius:6px;border:1px solid var(--border);font-size:12px;font-weight:500;background:var(--card);text-align:center}
+.page-chip.pc{border-left:3px solid var(--primary)}.page-chip.h5{border-left:3px solid var(--pass)}
+.tabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.tab{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:13px;cursor:pointer;transition:.15s}
+.tab:hover{border-color:var(--primary);color:var(--primary)}.tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.search{padding:8px 12px;border:1px solid var(--border);border-radius:var(--r);font-size:13px;background:var(--bg);color:var(--text);width:240px;outline:none;margin-bottom:16px}
+.search:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(100,50,252,.1)}
+.priority-summary{display:flex;gap:8px;margin-bottom:16px}
+.ps-item{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:4px}
+.ps-p0{background:#FEE2E2;color:var(--p0)}.ps-p1{background:#FEF3C7;color:#B45309}.ps-p2{background:#DBEAFE;color:var(--p2)}
+.module-matrix{margin-top:16px}
+.module-matrix table td:first-child{font-weight:600}
+.module-matrix table td{text-align:center}
+.module-matrix table td:first-child{text-align:left}
+</style>
+</head>
+<body>
+<div class="dash">
+  <div>
+    <h1>需求分析报告</h1>
+    <div class="meta">RUN-20260330-001 · Looply 用户系统 · 登录注册模块 V2.0 · 2026/3/30 18:30:00</div>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="n">28</div><div class="l">功能点</div></div>
+    <div class="stat"><div class="n">10</div><div class="l">用户故事</div></div>
+    <div class="stat"><div class="n">15</div><div class="l">设计页面</div></div>
+    <div class="stat"><div class="n" style="color:#FCD34D">82%</div><div class="l">覆盖度</div></div>
+    <div class="stat"><div class="n" style="color:#FCD34D">8</div><div class="l">冲突项</div></div>
+  </div>
+</div>
+<div class="main">
+  <div class="grid2">
+    <div class="panel">
+      <div class="panel-title"><span class="ic" style="background:var(--primary)">&#9632;</span>覆盖度概览</div>
+      <div id="coverageDetail"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title"><span class="ic" style="background:var(--warn)">!</span>冲突与差异（8）</div>
+      <div class="conflict-card"><div class="conflict-bar critical"></div><div><div class="conflict-title">缺失页面</div><div class="conflict-desc">所有 H5 端页面均标注「待设计」。PRD 1.2 节明确适用终端包含 H5 移动端，但 .pen 设计稿仅包含 PC 端页面，H5 端 0 个设计页。需补齐 H5 端设计稿。</div><span class="badge bfail">严重</span></div></div><div class="conflict-card"><div class="conflict-bar warning"></div><div><div class="conflict-title">缺失页面</div><div class="conflict-desc">PRD 5.1 节「密码修改（登录态）」功能无对应设计稿，PRD 中标注「待设计（账号设置页内）」。需补齐密码修改页设计。</div><span class="badge bwarn">警告</span></div></div><div class="conflict-card"><div class="conflict-bar warning"></div><div><div class="conflict-title">缺失页面</div><div class="conflict-desc">PRD 5.4 节「协议版本检测」弹窗无对应设计稿，PRD 中标注「待设计（弹窗形式）」。需补齐协议更新弹窗设计。</div><span class="badge bwarn">警告</span></div></div><div class="conflict-card"><div class="conflict-bar warning"></div><div><div class="conflict-title">交互不一致</div><div class="conflict-desc">PRD 2.5 节密码规则提示为「At least 8 characters with a mix of letters, numbers, and symbols」，含 symbols。但 PRD 6.3 节密码校验规则仅要求大小写字母+数字，symbols 为可选。设计稿 Screen/Register 密码提示文案需与最终规则一致。</div><span class="badge bwarn">警告</span></div></div><div class="conflict-card"><div class="conflict-bar info"></div><div><div class="conflict-title">需求模糊</div><div class="conflict-desc">PRD 提到「首页尚未设计」，退出登录、Session 过期等多个流程的跳转目标为「首页」。首页的具体形态和入口布局未定义，可能影响注册/登录入口的实际实现。</div><span class="badge binfo">提示</span></div></div><div class="conflict-card"><div class="conflict-bar info"></div><div><div class="conflict-title">需求模糊</div><div class="conflict-desc">产品架构图 v8.4 包含「手机号注册」「验证码登录（手机号/邮箱）」「Passkey 登录」等能力，但 PRD V2.0 MVP 未覆盖这些功能。需明确这些是后续迭代范围还是遗漏。</div><span class="badge binfo">提示</span></div></div><div class="conflict-card"><div class="conflict-bar info"></div><div><div class="conflict-title">命名不一致</div><div class="conflict-desc">PRD 2.9 节标题为「价值点展示」，但该节应为 2.9 而非 2.7 编号后的 OAuth 补充信息页序号。PRD 2.7 已用于 OAuthSupplementary，2.9 用于价值点展示。编号跳过了 2.8（已用于验证码），实际无编号错误，仅顺序稍显跳跃。</div><span class="badge binfo">提示</span></div></div><div class="conflict-card"><div class="conflict-bar warning"></div><div><div class="conflict-title">缺失页面</div><div class="conflict-desc">PRD 4.3 节退出入口描述了「用户头像下拉菜单」交互，但设计稿中无用户头像下拉菜单的设计。Screen/LogoutModal 仅为弹窗确认，触发入口未设计。</div><span class="badge bwarn">警告</span></div></div>
+    </div>
+    </div>
+  </div>
+  <div class="panel" style="margin-bottom:24px">
+    <div class="panel-title"><span class="ic" style="background:var(--primary)">F</span>功能点清单（28）</div>
+    <div class="priority-summary">
+      <span class="ps-item ps-p0">P0 20</span>
+      <span class="ps-item ps-p1">P1 7</span>
+      <span class="ps-item ps-p2">P2 1</span>
+    </div>
+    <div class="tabs" id="modTabs"></div>
+    <input class="search" type="text" placeholder="搜索功能点..." id="searchBox">
+    <div id="featureList"></div>
+  </div>
+  <div class="panel" style="margin-bottom:24px">
+    <div class="panel-title"><span class="ic" style="background:var(--p2)">US</span>用户故事（10）</div>
+    <table>
+      <thead><tr><th>编号</th><th>作为...</th><th>我希望...</th><th>以便...</th></tr></thead>
+      <tbody><tr><td><span class="feature-id">US-001</span></td><td>新用户</td><td>通过邮箱+密码快速注册 Looply 账号</td><td>开始在平台上购物</td></tr><tr><td><span class="feature-id">US-002</span></td><td>新用户</td><td>通过 Google/Apple/Facebook 一键注册</td><td>降低注册门槛，更快开始使用</td></tr><tr><td><span class="feature-id">US-003</span></td><td>已注册用户</td><td>使用邮箱和密码登录平台</td><td>访问我的账户继续购物</td></tr><tr><td><span class="feature-id">US-004</span></td><td>回访用户</td><td>看到系统识别我的身份，只需输入密码即可登录</td><td>免输邮箱，更快完成登录</td></tr><tr><td><span class="feature-id">US-005</span></td><td>忘记密码的用户</td><td>通过邮箱验证码重置密码</td><td>恢复对账户的访问</td></tr><tr><td><span class="feature-id">US-006</span></td><td>注重安全的用户</td><td>在登录状态下修改密码</td><td>保障账户安全</td></tr><tr><td><span class="feature-id">US-007</span></td><td>已登录用户</td><td>退出登录</td><td>确保在共用设备上账户安全</td></tr><tr><td><span class="feature-id">US-008</span></td><td>想要离开的用户</td><td>永久删除我的账号</td><td>让平台删除我的个人数据</td></tr><tr><td><span class="feature-id">US-009</span></td><td>新 OAuth 用户</td><td>在 OAuth 注册后补充个人信息</td><td>完善个人档案以获得更好的购物体验</td></tr><tr><td><span class="feature-id">US-010</span></td><td>关注隐私的用户</td><td>在注册前阅读服务条款和隐私政策</td><td>了解我的数据将如何被使用</td></tr></tbody>
+    </table>
+  </div>
+  <div class="panel" style="margin-bottom:24px">
+    <div class="panel-title"><span class="ic" style="background:var(--text2)">T</span>Design Token 统计</div>
+    <table>
+      <thead><tr><th>类别</th><th>数量</th><th>详情</th></tr></thead>
+      <tbody>
+        <tr><td>颜色变量</td><td>19</td><td>bg-accent, bg-accent-hover, bg-card, bg-input, bg-primary 等</td></tr>
+        <tr><td>字号层级</td><td>7 级</td><td>字体: DM Sans | 字号: 32px, 24px, 20px, 14px, 13px, 12px, 11px</td></tr>
+        <tr><td>组件</td><td>8</td><td>Button/Primary, Button/Outline, Button/Google, Button/Loading, Input/Default, Input/Error, Checkbox, Divider/WithText</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="grid2">
+    <div class="panel">
+      <div class="panel-title"><span class="ic" style="background:var(--primary)">PC</span>PC 端设计页面（15）</div>
+      <div class="page-grid"><div class="page-chip pc">Login</div><div class="page-chip pc">Register</div><div class="page-chip pc">Login-Remembered</div><div class="page-chip pc">Login-PasswordVisible</div><div class="page-chip pc">Login-ErrorState</div><div class="page-chip pc">Login-LoadingState</div><div class="page-chip pc">VerifyCode</div><div class="page-chip pc">ForgotPassword</div><div class="page-chip pc">ResetPassword</div><div class="page-chip pc">PrivacyPolicy</div><div class="page-chip pc">TermsOfService</div><div class="page-chip pc">CountrySelector</div><div class="page-chip pc">AccountDeletion</div><div class="page-chip pc">OAuthSupplementary</div><div class="page-chip pc">LogoutModal</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title"><span class="ic" style="background:var(--pass)">H5</span>H5 端设计页面（0）</div>
+      <div class="page-grid"><div style="font-size:13px;color:var(--text2);padding:12px 0">暂无 H5 端设计页面（待设计）</div></div>
+    </div>
+  </div>
+</div>
+<script>
+const DATA = {"run_id": "RUN-20260330-001", "generated_at": "2026-03-30T18:30:00.000Z", "requirement_name": "Looply 用户系统 · 登录注册模块", "requirement_version": "V2.0", "metrics": {"feature_count": 28, "user_story_count": 10, "page_count": 15, "design_component_count": 8, "design_token_count": 20, "coverage": 82, "conflict_count": 8, "conflicts_by_severity": {"critical": 1, "warning": 4, "info": 3}}, "features": [{"id": "F-AUTH-001", "title": "Email Registration", "title_zh": "邮箱注册", "description": "Users create a Looply account via email + password, followed by a 6-digit email verification code.", "description_zh": "用户通过邮箱+密码创建 Looply 账号，提交后发送 6 位验证码到邮箱，完成验证后创建账号并自动登录。包含邮箱格式校验、密码强度校验、协议勾选。", "priority": "P0", "complexity": "L", "linkedPages": ["Screen/Register", "Screen/VerifyCode"], "acceptanceCriteria": ["User enters email, password, checks ToS, clicks Create Account", "System sends 6-digit verification code to email", "After verification, account is created and user is auto-logged-in", "Duplicate email shows error message", "Password >= 8 chars with uppercase, lowercase, digit", "Unchecked agreement disables button"], "acceptanceCriteria_zh": ["用户输入邮箱、密码，勾选服务条款，点击「Create account」", "系统发送 6 位验证码到用户邮箱", "验证成功后创建账号并自动登录跳转首页", "重复邮箱提示「This email is already registered」", "密码须 ≥ 8 位，含大小写字母和数字", "未勾选协议时「Create account」按钮置灰不可点击"]}, {"id": "F-AUTH-002", "title": "OAuth Quick Registration (Google)", "title_zh": "Google 快捷注册", "description": "Users create account via Google OAuth 2.0 authorization code flow.", "description_zh": "用户通过 Google OAuth 2.0 授权码模式一键注册 Looply 账号。已绑定用户直接登录，邮箱已注册则关联已有账号，否则创建新账号。email 写入凭证表，预填昵称。", "priority": "P0", "complexity": "L", "linkedPages": ["Screen/Register", "Screen/OAuthSupplementary"], "acceptanceCriteria": ["Click Continue with Google triggers OAuth flow", "New user: create account + redirect to OAuthSupplementary", "Existing provider_uid: direct login", "Email already registered: link to existing account"], "acceptanceCriteria_zh": ["点击「Continue with Google」触发 OAuth 授权流程", "新用户：创建账号后跳转 OAuth 补充信息页", "已绑定用户（老用户）：直接签发 Token 登录", "邮箱已被邮箱注册方式占用：关联已有账号"]}, {"id": "F-AUTH-003", "title": "OAuth Quick Registration (Apple)", "title_zh": "Apple 快捷注册", "description": "Users create account via Apple OAuth 2.0 + OIDC.", "description_zh": "用户通过 Apple 登录一键注册。Apple Hide My Email 场景需特殊处理：真实邮箱写入凭证表，relay 邮箱不写入。昵称仅首次授权时返回 firstName + lastName。", "priority": "P0", "complexity": "L", "linkedPages": ["Screen/Register", "Screen/OAuthSupplementary"], "acceptanceCriteria": ["Click Continue with Apple triggers OAuth flow", "Real email: write to credential table; relay email: skip", "Name pre-filled only on first authorization"], "acceptanceCriteria_zh": ["点击「Continue with Apple」触发 OAuth 授权流程", "真实邮箱写入凭证表，relay 邮箱不写入", "昵称仅首次授权时预填（firstName + lastName）"]}, {"id": "F-AUTH-004", "title": "OAuth Quick Registration (Facebook)", "title_zh": "Facebook 快捷注册", "description": "Users create account via Facebook OAuth 2.0.", "description_zh": "用户通过 Facebook 登录一键注册。有邮箱则写入凭证表，无邮箱则标记待补邮箱，允许无邮箱注册，后续引导绑定。预填昵称。", "priority": "P0", "complexity": "M", "linkedPages": ["Screen/Register", "Screen/OAuthSupplementary"], "acceptanceCriteria": ["Click Continue with Facebook triggers OAuth flow", "With email: write to credential table; without: mark pending", "Allow registration without email, guide to bind later"], "acceptanceCriteria_zh": ["点击「Continue with Facebook」触发 OAuth 授权流程", "有邮箱写入凭证表，无邮箱标记待补邮箱", "允许无邮箱用户注册，后续引导绑定"]}, {"id": "F-AUTH-005", "title": "Unified Registration Entry", "title_zh": "统一注册入口", "description": "Registration page provides unified entry integrating email and OAuth registration.", "description_zh": "注册页面整合邮箱注册和三方快捷注册（Google/Apple/Facebook），用户可自由选择注册方式。页面包含邮箱密码表单、分隔线「or」、三方登录按钮、协议勾选、登录页切换链接。", "priority": "P0", "complexity": "M", "linkedPages": ["Screen/Register"], "acceptanceCriteria": ["Page shows email form + OAuth buttons separated by 'or' divider", "Bottom link to sign in page", "Agreement checkbox required for email registration"], "acceptanceCriteria_zh": ["页面展示邮箱注册表单 + 分隔线「or」+ 三方登录按钮", "底部提供「Already have an account? Sign in」链接跳转登录页", "邮箱注册需勾选协议"]}, {"id": "F-AUTH-006", "title": "Password Setup", "title_zh": "密码设置", "description": "Password rules enforcement during registration.", "description_zh": "注册时密码安全性要求：最少 8 个字符，必须包含大写字母、小写字母和数字。密码输入框支持显示/隐藏切换，下方显示规则提示。", "priority": "P0", "complexity": "S", "linkedPages": ["Screen/Register"], "acceptanceCriteria": ["Password >= 8 chars, uppercase + lowercase + digit required", "Show/hide toggle on password field", "Rule hints displayed below input"], "acceptanceCriteria_zh": ["密码 ≥ 8 位，含大写、小写字母和数字", "密码框支持显示/隐藏切换（eye-off/eye 图标）", "密码框下方显示规则提示文案"]}, {"id": "F-AUTH-007", "title": "Agreement Acceptance", "title_zh": "协议承接", "description": "ToS and Privacy Policy confirmation during registration.", "description_zh": "注册流程嵌入 ToS 和 Privacy Policy 确认。注册页为主动勾选（opt-in），未勾选时按钮置灰。登录页底部展示文案（无复选框）。记录同意时间戳和协议版本号。", "priority": "P0", "complexity": "S", "linkedPages": ["Screen/Register", "Screen/Login", "Screen/TermsOfService", "Screen/PrivacyPolicy"], "acceptanceCriteria": ["Registration: active opt-in checkbox, not pre-checked", "Login: text-only agreement notice", "ToS and Privacy Policy links open respective pages", "Consent timestamp and version recorded"], "acceptanceCriteria_zh": ["注册页：主动勾选复选框（不可默认勾选）", "登录页：底部展示协议文案（无复选框）", "「Terms of Service」和「Privacy Policy」为可点击链接", "记录用户同意时间戳和协议版本号"]}, {"id": "F-AUTH-008", "title": "Terms of Service Page", "title_zh": "服务条款页面", "description": "Static page displaying Looply's Terms of Service.", "description_zh": "展示 Looply 平台服务条款完整内容。顶部导航栏含 Logo 和返回按钮，内容区域为长文本滚动。MVP 阶段前端静态页面，内容由法务提供。", "priority": "P1", "complexity": "S", "linkedPages": ["Screen/TermsOfService"], "acceptanceCriteria": ["Top bar with Looply Logo and Back button", "Scrollable content area with full ToS text", "Last updated date displayed", "Accessible without login"], "acceptanceCriteria_zh": ["顶部导航栏：左侧 Looply Logo + 右侧「Back」按钮", "内容区域支持滚动显示完整协议正文", "显示最后更新日期", "无需登录即可访问"]}, {"id": "F-AUTH-009", "title": "Privacy Policy Page", "title_zh": "隐私政策页面", "description": "Static page displaying Looply's Privacy Policy.", "description_zh": "展示 Looply 平台隐私政策完整内容。页面结构与服务条款页一致。需符合 GDPR、CCPA 等数据保护法规。", "priority": "P1", "complexity": "S", "linkedPages": ["Screen/PrivacyPolicy"], "acceptanceCriteria": ["Same layout as ToS page", "Content compliant with GDPR/CCPA", "Accessible without login"], "acceptanceCriteria_zh": ["页面结构与服务条款页一致", "内容符合 GDPR/CCPA 等数据保护法规", "无需登录即可访问"]}, {"id": "F-AUTH-010", "title": "OAuth Supplementary Page", "title_zh": "OAuth 补充信息页", "description": "Post-OAuth registration page for supplementary profile info.", "description_zh": "OAuth 首次注册后引导补充 Display Name 和 Country/Region。展示 OAuth 连接状态标签，支持跳过。Display Name 从 Provider 预填，Country 从 IP 识别预填。", "priority": "P0", "complexity": "M", "linkedPages": ["Screen/OAuthSupplementary"], "acceptanceCriteria": ["Shows Connected with {Provider} as {email} badge", "Display Name and Country/Region fields", "Agreement checkbox required for Complete Setup", "Skip for now link available", "Pre-fill from OAuth provider data and IP geolocation"], "acceptanceCriteria_zh": ["展示 OAuth 连接状态标签（绿色背景 + 勾选图标）", "Display Name 和 Country/Region 表单字段", "勾选协议后「Complete Setup」按钮可点击", "提供「Skip for now」跳过链接", "Display Name 从 Provider 预填，Country 从 IP 预填"]}, {"id": "F-AUTH-011", "title": "Email Verification Code", "title_zh": "邮箱验证码校验", "description": "6-digit email verification shared by registration and forgot password flows.", "description_zh": "注册和忘记密码共用验证码页面。6 位数字验证码，10 分钟有效，一次性使用。支持自动聚焦、粘贴填充、60 秒冷却重发。连续 5 次错误后验证码失效。", "priority": "P0", "complexity": "M", "linkedPages": ["Screen/VerifyCode"], "acceptanceCriteria": ["6 independent input boxes, auto-focus and paste support", "10-minute expiry, single-use", "5 consecutive errors invalidate code", "60-second cooldown for resend, max 5 per hour", "Back to sign in link"], "acceptanceCriteria_zh": ["6 个独立输入框，自动聚焦和粘贴支持", "验证码 10 分钟有效，一次性使用", "连续 5 次错误后验证码失效，需重新发送", "重发冷却 60 秒，每小时上限 5 次", "底部「Back to sign in」返回链接"]}, {"id": "F-AUTH-012", "title": "Brand Value Display", "title_zh": "价值点展示", "description": "Left-side brand visual on registration/login pages (PC only).", "description_zh": "注册/登录页面左侧 PC 端品牌展示区（660px 宽），包含全屏背景图、品牌 Logo、价值主张文案。H5 端不展示。", "priority": "P1", "complexity": "S", "linkedPages": ["Screen/Register", "Screen/Login"], "acceptanceCriteria": ["660px fixed-width left panel", "Full-screen brand background image", "Brand logo and value proposition text", "Not shown on H5"], "acceptanceCriteria_zh": ["左侧面板固定 660px 宽", "全屏品牌背景图 + 品牌 Logo + 价值主张文案", "纯展示区域，无交互", "H5 端不展示"]}, {"id": "F-AUTH-013", "title": "Country/Region Selector", "title_zh": "国家/地区选择器", "description": "Modal popup for country selection.", "description_zh": "模态弹窗式国家选择器，480px 宽居中显示。搜索框支持实时过滤，选中项紫色高亮。MVP 支持 7 个国家（US/UK/DE/FR/IT/ES/JP）。默认根据 IP 识别，前端静态组件。", "priority": "P1", "complexity": "M", "linkedPages": ["Screen/CountrySelector"], "acceptanceCriteria": ["Modal with search, 7 countries listed", "Selected item purple highlight with check icon", "Confirm button to apply selection", "Click overlay or X to cancel", "Default from IP geolocation"], "acceptanceCriteria_zh": ["弹窗含搜索框，列出 7 个国家", "选中项紫色高亮背景（#F0EAFF）+ 勾选图标", "「Confirm」按钮确认选择", "点击遮罩层或关闭按钮取消", "默认根据 IP 自动识别（默认 United States）"]}, {"id": "F-AUTH-014", "title": "Email Password Login", "title_zh": "邮箱密码登录", "description": "Standard email + password login flow.", "description_zh": "用户通过已注册邮箱和密码登录。包含设备指纹采集、风控检测、密码错误计数（5 次锁定 30 分钟）、Token 签发、Session 关联。不暴露邮箱是否存在。", "priority": "P0", "complexity": "L", "linkedPages": ["Screen/Login", "Screen/Login-PasswordVisible", "Screen/Login-ErrorState", "Screen/Login-LoadingState"], "acceptanceCriteria": ["Email + password form with Remember me and Forgot password", "Incorrect credentials: 'Incorrect email or password'", "5 failed attempts: account locked 30 minutes", "Password visible toggle", "Loading state on submit", "Error state with red borders and toast"], "acceptanceCriteria_zh": ["邮箱+密码表单，含 Remember me 和 Forgot password", "凭证错误提示「Incorrect email or password」（不区分邮箱/密码）", "连续 5 次错误锁定 30 分钟", "密码可见状态切换", "提交时按钮显示 loading 动画", "错误状态：红色边框 + 错误 Toast"]}, {"id": "F-AUTH-015", "title": "OAuth Quick Login", "title_zh": "OAuth 快捷登录", "description": "Login via Google/Apple/Facebook for existing users.", "description_zh": "已通过三方注册的用户使用对应账号一键登录。未注册用户自动走注册流程。已绑定用户直接签发 Token，未绑定走 OAuth 注册流程。", "priority": "P0", "complexity": "M", "linkedPages": ["Screen/Login"], "acceptanceCriteria": ["Continue with Google/Apple/Facebook buttons on login page", "Bound user: direct login", "Unbound user: redirect to OAuth registration flow"], "acceptanceCriteria_zh": ["登录页展示「Continue with Google/Apple/Facebook」按钮", "已绑定用户：直接签发 Token 登录", "未绑定用户：自动走 OAuth 注册流程"]}, {"id": "F-AUTH-016", "title": "Forgot Password", "title_zh": "忘记密码", "description": "Email verification for password reset.", "description_zh": "用户通过邮箱验证身份后重置密码。输入邮箱后发送验证码，无论邮箱是否存在都返回成功提示（防枚举）。验证通过后跳转重置密码页。", "priority": "P0", "complexity": "M", "linkedPages": ["Screen/ForgotPassword", "Screen/VerifyCode"], "acceptanceCriteria": ["Email input with Send reset code button", "Anti-enumeration: success message even if email not registered", "Redirects to VerifyCode page after sending", "Back to sign in link"], "acceptanceCriteria_zh": ["邮箱输入框 + 「Send reset code」按钮", "防枚举：无论邮箱是否注册均提示已发送", "发送后跳转验证码页面", "底部「Back to sign in」返回链接"]}, {"id": "F-AUTH-017", "title": "Reset Password", "title_zh": "重置密码", "description": "Set new password after verification.", "description_zh": "验证码校验通过后设置新密码。新密码和确认密码两个输入框，校验密码规则、新旧密码不能相同。重置后失效所有旧 Token，写入审计日志，跳转登录页。15 分钟未完成则会话过期。", "priority": "P0", "complexity": "M", "linkedPages": ["Screen/ResetPassword"], "acceptanceCriteria": ["New password + confirm password fields", "Same password rules as registration", "New password must differ from old", "15-minute session timeout", "Success: redirect to login page"], "acceptanceCriteria_zh": ["新密码 + 确认密码两个输入框（均支持显示/隐藏）", "密码规则与注册一致", "新密码不能与旧密码相同", "验证码通过后 15 分钟未完成则会话过期", "重置成功后自动跳转登录页"]}, {"id": "F-AUTH-018", "title": "Login State Persistence", "title_zh": "登录态保持", "description": "JWT dual-token session management with Remember Me.", "description_zh": "JWT 双 Token 方案：access_token 短期（15 分钟）不落库，refresh_token 长期（勾选 Remember Me 为 30 天，否则会话级）。Cookie 设置 HttpOnly + Secure + SameSite=Lax。", "priority": "P0", "complexity": "L", "linkedPages": ["Screen/Login"], "acceptanceCriteria": ["Remember Me checkbox on login form", "Checked: refresh_token 30 days; unchecked: session-level", "access_token not persisted, in-memory only", "Cookie: HttpOnly, Secure, SameSite=Lax"], "acceptanceCriteria_zh": ["登录表单中提供「Remember me」复选框", "勾选：refresh_token 30 天有效；未勾选：会话级", "access_token 不落库，仅存在于内存/HTTP Header", "Cookie 属性：HttpOnly + Secure + SameSite=Lax"]}, {"id": "F-AUTH-019", "title": "Remembered User Login", "title_zh": "回访用户登录页", "description": "Personalized login page for returning users with Remember Me.", "description_zh": "回访用户（Remember Me 有效期内）展示个性化登录页：用户头像（首字母圆形 72px）、欢迎语含用户名、预填邮箱、仅密码输入框。无 OAuth 按钮和注册切换链接。提供「Use another account」切换标准登录。", "priority": "P1", "complexity": "M", "linkedPages": ["Screen/Login-Remembered"], "acceptanceCriteria": ["Avatar with user initial, 72px purple background", "Welcome back, {username} title", "Email shown as subtitle, no email input", "Password field auto-focused", "No OAuth buttons or sign up link", "Use another account link to standard login"], "acceptanceCriteria_zh": ["显示用户首字母圆形头像（72px，紫色背景 #F0EAFF）", "标题「Welcome back, {用户名}」，副标题显示邮箱", "无邮箱输入框，仅密码输入框（自动聚焦）", "无 OAuth 按钮和注册切换链接", "提供「Not you? Use another account」链接"]}, {"id": "F-AUTH-020", "title": "Active Logout", "title_zh": "主动退出", "description": "User-initiated logout with confirmation dialog.", "description_zh": "用户点击退出入口弹出确认弹窗（420×260px），含「Yes, Sign Out」和「Cancel」按钮。确认后清除 Session/Token（含 refresh_token），跳转首页。退出失败则前端强制清除。", "priority": "P0", "complexity": "S", "linkedPages": ["Screen/LogoutModal"], "acceptanceCriteria": ["Confirmation modal with Sign Out and Cancel buttons", "Clears Session/Token including refresh_token", "Redirects to homepage on success", "Frontend force-clear on failure"], "acceptanceCriteria_zh": ["弹出确认弹窗含「Yes, Sign Out」和「Cancel」按钮", "清除 Session/Token（含 refresh_token）", "退出成功跳转首页", "退出请求失败时前端强制清除本地 Token"]}, {"id": "F-AUTH-021", "title": "Account Deletion", "title_zh": "账号注销", "description": "Permanent account deletion with identity verification.", "description_zh": "用户主动永久删除账号。需身份验证（有密码验密码，仅 OAuth 重新授权）。30 天冷静期内可恢复，超期永久删除。软删除 + 数据保留策略（交易记录脱敏保留，个人信息 30 天后物理删除）。", "priority": "P0", "complexity": "L", "linkedPages": ["Screen/AccountDeletion"], "acceptanceCriteria": ["Warning display with red alert icon", "Password verification for password users", "OAuth re-authorization for OAuth-only users", "Active orders block deletion", "30-day cooling period for recovery", "Permanently delete account red button"], "acceptanceCriteria_zh": ["红色警告区域 + 警告图标（triangle-alert）", "有密码用户输入密码验证身份", "仅 OAuth 用户重新授权验证身份", "有进行中订单时按钮置灰不可点击", "30 天冷静期内可联系客服恢复", "「Permanently delete account」红色按钮（#EF4444）"]}, {"id": "F-AUTH-022", "title": "Password Change (Logged In)", "title_zh": "密码修改（登录态）", "description": "Logged-in user changes password by verifying old password first.", "description_zh": "已登录用户主动修改密码。需先验证旧密码，新旧密码不能相同，新密码需满足密码规则。修改后除当前 Session 外所有 Session 失效，写入审计日志。", "priority": "P1", "complexity": "M", "linkedPages": [], "acceptanceCriteria": ["Old password verification required", "New password must differ from old", "All other sessions invalidated", "Audit log recorded"], "acceptanceCriteria_zh": ["需先验证旧密码", "新旧密码不能相同", "修改后除当前 Session 外所有 Session 失效", "写入审计日志（改密码）"]}, {"id": "F-AUTH-023", "title": "Token Refresh", "title_zh": "Token 刷新", "description": "Automatic access_token refresh using refresh_token.", "description_zh": "access_token 过期时自动使用 refresh_token 换取新 token，实现无感续期。校验 refresh_token 有效性和 Session 活跃状态，签发新 access_token 并滑动续期 refresh_token。", "priority": "P0", "complexity": "M", "linkedPages": [], "acceptanceCriteria": ["Auto-refresh when access_token expires", "Invalid refresh_token: redirect to login with session expired message", "Revoked session: return 401", "Sliding window refresh_token renewal"], "acceptanceCriteria_zh": ["access_token 过期时自动刷新", "refresh_token 无效/过期：跳转首页提示重新登录", "Session 已吊销：返回 401", "refresh_token 滑动续期"]}, {"id": "F-AUTH-024", "title": "Session Expiry (Passive Logout)", "title_zh": "会话失效（被动退出）", "description": "Auto-handling of expired sessions.", "description_zh": "登录会话失效时自动处理：Token 过期、密码修改、管理员强制下线、账号锁定。清除本地 Token/Cookie，跳转首页提示「Session expired」，登录后恢复之前页面。", "priority": "P0", "complexity": "S", "linkedPages": [], "acceptanceCriteria": ["401 response triggers token refresh attempt", "Refresh failure: clear tokens, redirect to homepage", "Show 'Session expired' message", "Restore previous page after re-login"], "acceptanceCriteria_zh": ["接口返回 401 触发 Token 刷新尝试", "刷新失败：清除本地 Token/Cookie，跳转首页", "展示「Session expired. Please sign in again.」提示", "登录成功后恢复之前访问的页面"]}, {"id": "F-AUTH-025", "title": "Agreement Version Check", "title_zh": "协议版本检测", "description": "Check for updated ToS/Privacy Policy on page load.", "description_zh": "用户访问任意页面时检测协议版本变化。有更新则弹窗要求确认，同意后写入 ConsentRecord（版本号+国家），拒绝则强制退出登录。", "priority": "P1", "complexity": "M", "linkedPages": [], "acceptanceCriteria": ["Check agreement version on every page load", "Show update modal if version changed", "Accept: record consent with version and country", "Decline: force logout"], "acceptanceCriteria_zh": ["每次页面加载时检查协议版本", "版本有更新时弹出确认弹窗", "同意：写入 ConsentRecord（版本号+国家）", "拒绝：强制退出登录"]}, {"id": "F-AUTH-026", "title": "Risk Control Detection", "title_zh": "风控检测", "description": "Device fingerprint + IP based risk assessment at key checkpoints.", "description_zh": "注册、登录、OAuth 认证等关键节点执行风控检测：设备指纹识别、信任设备判断、IP 地理位置异常检测、暴力破解检测、综合风险评估（低→放行，中→验证码，高→拦截）。", "priority": "P0", "complexity": "L", "linkedPages": [], "acceptanceCriteria": ["Device fingerprint collection on frontend", "Unknown device: create record", "Untrusted device: require extra verification", "Abnormal IP: risk flag", "Brute force detection and blocking"], "acceptanceCriteria_zh": ["前端采集设备指纹提交后端", "未知设备：创建记录", "不信任设备：要求额外验证", "IP 地理位置异常：风险标记", "暴力破解检测与拦截"]}, {"id": "F-AUTH-027", "title": "Login Rate Limiting", "title_zh": "登录限错与注册限频", "description": "Rate limiting for login attempts and registration.", "description_zh": "登录限错：连续 5 次密码错误锁定 30 分钟。注册限频：同一 IP 每小时最多 5 个账号，同一设备指纹每小时最多 3 个。发信限频：60 秒冷却，每小时 5 封/邮箱，10 次/IP。", "priority": "P0", "complexity": "M", "linkedPages": [], "acceptanceCriteria": ["5 failed login attempts: 30-minute lock", "Registration: 5/hour per IP, 3/hour per device", "Email: 60s cooldown, 5/hour per email, 10/hour per IP"], "acceptanceCriteria_zh": ["连续 5 次密码错误：账号锁定 30 分钟", "注册限频：同 IP 每小时 5 个，同设备每小时 3 个", "发信限频：60 秒冷却，每邮箱每小时 5 封，每 IP 每小时 10 次"]}, {"id": "F-AUTH-028", "title": "Identifier-First Unified Entry (Reserved)", "title_zh": "Identifier-First 统一入口（预留）", "description": "Reserved unified entry point for future implementation.", "description_zh": "预留 Identifier-First 统一入口模式：前置 /api/auth/identify 端点，返回 {action: register|login, methods: [...]}。现有注册/登录后端流程零改动，仅新增路由层。待业务成熟后评估启用。", "priority": "P2", "complexity": "M", "linkedPages": [], "acceptanceCriteria": ["Reserved for future implementation", "API endpoint /api/auth/identify planned", "No changes to existing backend flows"], "acceptanceCriteria_zh": ["预留功能，待业务成熟后评估启用", "计划前置 /api/auth/identify 端点", "现有注册/登录后端流程零改动"]}], "userStories": [{"id": "US-001", "role": "New visitor", "role_zh": "新用户", "action": "register via email with password", "action_zh": "通过邮箱+密码快速注册 Looply 账号", "benefit": "start shopping on the platform", "benefit_zh": "开始在平台上购物"}, {"id": "US-002", "role": "New visitor", "role_zh": "新用户", "action": "register with one click via Google/Apple/Facebook", "action_zh": "通过 Google/Apple/Facebook 一键注册", "benefit": "reduce registration friction and start faster", "benefit_zh": "降低注册门槛，更快开始使用"}, {"id": "US-003", "role": "Registered user", "role_zh": "已注册用户", "action": "log in with email and password", "action_zh": "使用邮箱和密码登录平台", "benefit": "access my account and continue shopping", "benefit_zh": "访问我的账户继续购物"}, {"id": "US-004", "role": "Returning user", "role_zh": "回访用户", "action": "see my identity recognized and just enter password", "action_zh": "看到系统识别我的身份，只需输入密码即可登录", "benefit": "log in faster without re-entering email", "benefit_zh": "免输邮箱，更快完成登录"}, {"id": "US-005", "role": "Forgetful user", "role_zh": "忘记密码的用户", "action": "reset my password via email verification", "action_zh": "通过邮箱验证码重置密码", "benefit": "regain access to my account", "benefit_zh": "恢复对账户的访问"}, {"id": "US-006", "role": "Security-conscious user", "role_zh": "注重安全的用户", "action": "change my password while logged in", "action_zh": "在登录状态下修改密码", "benefit": "keep my account secure", "benefit_zh": "保障账户安全"}, {"id": "US-007", "role": "Logged-in user", "role_zh": "已登录用户", "action": "sign out of my account", "action_zh": "退出登录", "benefit": "ensure my account is safe on shared devices", "benefit_zh": "确保在共用设备上账户安全"}, {"id": "US-008", "role": "User wanting to leave", "role_zh": "想要离开的用户", "action": "permanently delete my account", "action_zh": "永久删除我的账号", "benefit": "have my personal data removed from the platform", "benefit_zh": "让平台删除我的个人数据"}, {"id": "US-009", "role": "New OAuth user", "role_zh": "新 OAuth 用户", "action": "complete my profile after OAuth registration", "action_zh": "在 OAuth 注册后补充个人信息", "benefit": "have a complete profile for better shopping experience", "benefit_zh": "完善个人档案以获得更好的购物体验"}, {"id": "US-010", "role": "Privacy-aware user", "role_zh": "关注隐私的用户", "action": "read the Terms of Service and Privacy Policy before registering", "action_zh": "在注册前阅读服务条款和隐私政策", "benefit": "understand how my data will be used", "benefit_zh": "了解我的数据将如何被使用"}], "designPages": {"pc": [{"id": "p5U4A", "name": "Login", "linkedFeatures": ["F-AUTH-014", "F-AUTH-015", "F-AUTH-018"]}, {"id": "bDcg4", "name": "Register", "linkedFeatures": ["F-AUTH-001", "F-AUTH-002", "F-AUTH-003", "F-AUTH-004", "F-AUTH-005", "F-AUTH-006", "F-AUTH-007"]}, {"id": "UBHRo", "name": "Login-Remembered", "linkedFeatures": ["F-AUTH-019"]}, {"id": "TsYyp", "name": "Login-PasswordVisible", "linkedFeatures": ["F-AUTH-014"]}, {"id": "PUITN", "name": "Login-ErrorState", "linkedFeatures": ["F-AUTH-014"]}, {"id": "BYd4G", "name": "Login-LoadingState", "linkedFeatures": ["F-AUTH-014"]}, {"id": "pFlsk", "name": "VerifyCode", "linkedFeatures": ["F-AUTH-011", "F-AUTH-016"]}, {"id": "3Sgyy", "name": "ForgotPassword", "linkedFeatures": ["F-AUTH-016"]}, {"id": "tQCS8", "name": "ResetPassword", "linkedFeatures": ["F-AUTH-017"]}, {"id": "1Qw6T", "name": "PrivacyPolicy", "linkedFeatures": ["F-AUTH-009"]}, {"id": "uuxjK", "name": "TermsOfService", "linkedFeatures": ["F-AUTH-008"]}, {"id": "63pEZ", "name": "CountrySelector", "linkedFeatures": ["F-AUTH-013"]}, {"id": "BT1XZ", "name": "AccountDeletion", "linkedFeatures": ["F-AUTH-021"]}, {"id": "lUUtX", "name": "OAuthSupplementary", "linkedFeatures": ["F-AUTH-010"]}, {"id": "vGYSe", "name": "LogoutModal", "linkedFeatures": ["F-AUTH-020"]}], "h5": []}, "conflicts": [{"type": "missing_page", "type_zh": "缺失页面", "description": "所有 H5 端页面均标注「待设计」。PRD 1.2 节明确适用终端包含 H5 移动端，但 .pen 设计稿仅包含 PC 端页面，H5 端 0 个设计页。需补齐 H5 端设计稿。", "affectedItems": ["F-AUTH-001", "F-AUTH-014", "F-AUTH-011", "F-AUTH-016", "F-AUTH-017"], "severity": "critical"}, {"type": "missing_page", "type_zh": "缺失页面", "description": "PRD 5.1 节「密码修改（登录态）」功能无对应设计稿，PRD 中标注「待设计（账号设置页内）」。需补齐密码修改页设计。", "affectedItems": ["F-AUTH-022"], "severity": "warning"}, {"type": "missing_page", "type_zh": "缺失页面", "description": "PRD 5.4 节「协议版本检测」弹窗无对应设计稿，PRD 中标注「待设计（弹窗形式）」。需补齐协议更新弹窗设计。", "affectedItems": ["F-AUTH-025"], "severity": "warning"}, {"type": "inconsistency", "type_zh": "交互不一致", "description": "PRD 2.5 节密码规则提示为「At least 8 characters with a mix of letters, numbers, and symbols」，含 symbols。但 PRD 6.3 节密码校验规则仅要求大小写字母+数字，symbols 为可选。设计稿 Screen/Register 密码提示文案需与最终规则一致。", "affectedItems": ["Screen/Register", "F-AUTH-006"], "severity": "warning"}, {"type": "ambiguous", "type_zh": "需求模糊", "description": "PRD 提到「首页尚未设计」，退出登录、Session 过期等多个流程的跳转目标为「首页」。首页的具体形态和入口布局未定义，可能影响注册/登录入口的实际实现。", "affectedItems": ["F-AUTH-020", "F-AUTH-024"], "severity": "info"}, {"type": "ambiguous", "type_zh": "需求模糊", "description": "产品架构图 v8.4 包含「手机号注册」「验证码登录（手机号/邮箱）」「Passkey 登录」等能力，但 PRD V2.0 MVP 未覆盖这些功能。需明确这些是后续迭代范围还是遗漏。", "affectedItems": [], "severity": "info"}, {"type": "inconsistency", "type_zh": "命名不一致", "description": "PRD 2.9 节标题为「价值点展示」，但该节应为 2.9 而非 2.7 编号后的 OAuth 补充信息页序号。PRD 2.7 已用于 OAuthSupplementary，2.9 用于价值点展示。编号跳过了 2.8（已用于验证码），实际无编号错误，仅顺序稍显跳跃。", "affectedItems": [], "severity": "info"}, {"type": "missing_page", "type_zh": "缺失页面", "description": "PRD 4.3 节退出入口描述了「用户头像下拉菜单」交互，但设计稿中无用户头像下拉菜单的设计。Screen/LogoutModal 仅为弹窗确认，触发入口未设计。", "affectedItems": ["F-AUTH-020"], "severity": "warning"}], "coverage": {"total_features": 28, "features_with_design": 23, "total_design_pages": 15, "pages_linked_to_features": 15, "unmatched_features": ["F-AUTH-022", "F-AUTH-023", "F-AUTH-024", "F-AUTH-025", "F-AUTH-028"], "unmatched_pages": [], "coverage_pct": 82}, "tokens": {"colors": {"bg-accent": "#6432FC", "bg-accent-hover": "#5428E0", "bg-card": "#F6F7F8", "bg-input": "#FFFFFF", "bg-primary": "#FFFFFF", "bg-secondary": "#F8F9FB", "border-default": "#E5E7EB", "border-error": "#EF4444", "border-focus": "#6432FC", "google-blue": "#4285F4", "overlay": "#00000066", "text-accent": "#6432FC", "text-error": "#EF4444", "text-link": "#6432FC", "text-primary": "#1A1A1A", "text-secondary": "#6B7280", "text-success": "#22C55E", "text-tertiary": "#7C8694", "text-white": "#FFFFFF"}, "typography": {"fontFamily": "DM Sans", "sizes": {"h1": "32px", "h2": "24px", "h3": "20px", "body": "14px", "caption": "13px", "small": "12px", "tiny": "11px"}, "weights": {"bold": "700", "semibold": "600", "medium": "500", "regular": "400"}}, "spacing": {"card-padding": "44px 40px", "card-gap": "24px", "card-corner-radius": "20px", "input-padding": "12px 16px", "input-corner-radius": "10px", "button-padding": "14px 24px", "button-corner-radius": "12px", "form-width": "420px (login/register), 460px (cards)"}, "components": [{"name": "Button/Primary", "id": "9jOri"}, {"name": "Button/Outline", "id": "9eEJ2"}, {"name": "Button/Google", "id": "FfCVX"}, {"name": "Button/Loading", "id": "l76hl"}, {"name": "Input/Default", "id": "nWFgj"}, {"name": "Input/Error", "id": "riBYc"}, {"name": "Checkbox", "id": "IpRwp"}, {"name": "Divider/WithText", "id": "ivUFb"}]}};
+const features = DATA.features;
+// 模块定义（key 英文、label 中文）
+const MODULE_DEFS = [
+  { key: 'REG', label: '注册', seqs: ['001','002','003','004','005','006','007','008','009','010','011','012','013'] },
+  { key: 'LOGIN', label: '登录', seqs: ['014','015','016','017','018','019'] },
+  { key: 'LOGOUT', label: '退出', seqs: ['020','021'] },
+  { key: 'PWD', label: '密码与会话', seqs: ['022','023','024','025'] },
+  { key: 'SEC', label: '安全风控', seqs: ['026','027','028'] }
+];
+function getModuleKey(f) {
+  const seq = f.id.split('-').pop();
+  const m = MODULE_DEFS.find(d => d.seqs.includes(seq));
+  return m ? m.key : 'OTHER';
+}
+function getModuleLabel(key) {
+  const m = MODULE_DEFS.find(d => d.key === key);
+  return m ? m.label : '其他';
+}
+const modules = [
+  { key: 'all', label: '全部' },
+  ...MODULE_DEFS.map(d => ({ key: d.key, label: d.label, filter: f => getModuleKey(f) === d.key }))
+];
+let activeModule = 'all';
+let searchQuery = '';
+function renderTabs() {
+  document.getElementById('modTabs').innerHTML = modules.map(m => {
+    const count = m.key === 'all' ? features.length : features.filter(m.filter).length;
+    return '<button class="tab' + (activeModule===m.key?' active':'') + '" onclick="activeModule=\'' + m.key + '\';render()">' + m.label + ' (' + count + ')</button>';
+  }).join('');
+}
+function getFiltered() {
+  let list = features;
+  if (activeModule !== 'all') {
+    const mod = modules.find(m => m.key === activeModule);
+    if (mod && mod.filter) list = list.filter(mod.filter);
+  }
+  if (searchQuery) list = list.filter(f => (f.id + ' ' + (f.title_zh||f.title) + ' ' + (f.description_zh||f.description)).toLowerCase().includes(searchQuery));
+  return list;
+}
+function renderFeatures() {
+  const list = getFiltered();
+  document.getElementById('featureList').innerHTML = list.map(f => {
+    const pClass = f.priority === 'P0' ? 'bp0' : f.priority === 'P1' ? 'bp1' : 'bp2';
+    const pages = (f.linkedPages || []).map(p => '<span class="tag">' + p + '</span>').join('');
+    const criteria = (f.acceptanceCriteria_zh || f.acceptanceCriteria || []).map(c => '<li>' + c + '</li>').join('');
+    return '<div class="feature-card" onclick="this.classList.toggle(\'open\')">' +
+      '<div class="feature-header">' +
+        '<span class="feature-id">' + f.id + '</span>' +
+        '<span class="feature-title">' + (f.title_zh || f.title) + '</span>' +
+        '<span class="badge ' + pClass + '">' + f.priority + '</span>' +
+        '<span class="badge binfo">' + f.complexity + '</span>' +
+        '<span class="chevron">›</span>' +
+      '</div>' +
+      '<div class="feature-body">' +
+        '<p>' + (f.description_zh || f.description) + '</p>' +
+        (pages ? '<p><strong>关联设计页:</strong> ' + pages + '</p>' : '<p><span class="badge bfail">无关联设计页</span></p>') +
+        (criteria ? '<p><strong>验收标准:</strong></p><ul>' + criteria + '</ul>' : '') +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+function renderCoverage() {
+  const withDesign = features.filter(f => (f.linkedPages||[]).length > 0);
+  const withoutDesign = features.filter(f => !(f.linkedPages||[]).length);
+  const covPct = Math.round((withDesign.length / features.length) * 100);
+  const covColor = covPct >= 90 ? 'var(--pass)' : covPct >= 80 ? 'var(--warn)' : 'var(--fail)';
+
+  // 按模块统计
+  let matrixHtml = '';
+  let t0=0,t1=0,t2=0,tTotal=0,tWithDesign=0;
+  MODULE_DEFS.forEach(mod => {
+    const name = mod.label;
+    const fs = features.filter(f => getModuleKey(f) === mod.key);
+    const p0 = fs.filter(f=>f.priority==='P0').length;
+    const p1 = fs.filter(f=>f.priority==='P1').length;
+    const p2 = fs.filter(f=>f.priority==='P2').length;
+    const hasDesign = fs.filter(f => (f.linkedPages||[]).length > 0).length;
+    const modCov = fs.length > 0 ? Math.round((hasDesign/fs.length)*100) : 0;
+    const modColor = modCov >= 90 ? '#22C55E' : modCov >= 80 ? '#F59E0B' : '#EF4444';
+    t0+=p0; t1+=p1; t2+=p2; tTotal+=fs.length; tWithDesign+=hasDesign;
+    matrixHtml += '<tr><td style="font-weight:600">'+name+'</td><td>'+p0+'</td><td>'+p1+'</td><td>'+p2+'</td><td><strong>'+fs.length+'</strong></td><td>'+hasDesign+'/'+fs.length+'</td><td><span style="color:'+modColor+';font-weight:700">'+modCov+'%</span></td></tr>';
+  });
+  matrixHtml += '<tr style="font-weight:700;border-top:2px solid var(--border)"><td>合计</td><td>'+t0+'</td><td>'+t1+'</td><td>'+t2+'</td><td>'+tTotal+'</td><td>'+tWithDesign+'/'+tTotal+'</td><td><span style="color:'+covColor+';font-weight:700">'+covPct+'%</span></td></tr>';
+
+  // 未覆盖设计的功能点
+  let gapHtml = '';
+  if (withoutDesign.length > 0) {
+    gapHtml = '<div style="margin-top:14px"><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px">未关联设计页的功能点（' + withoutDesign.length + '）</div>';
+    gapHtml += withoutDesign.map(f => {
+      const pCls = f.priority==='P0'?'bp0':f.priority==='P1'?'bp1':'bp2';
+      return '<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px"><span class="badge '+pCls+'">'+f.priority+'</span><span style="font-family:monospace;color:var(--primary);font-size:11px">'+f.id+'</span><span>'+(f.title_zh||f.title)+'</span></div>';
+    }).join('');
+    gapHtml += '</div>';
+  }
+
+  document.getElementById('coverageDetail').innerHTML = `
+    <div class="cov-bar">
+      <span style="font-size:12px;font-weight:600;color:var(--text2)">需求-设计覆盖度</span>
+      <div class="cov-track"><div class="cov-fill" style="width:${covPct}%;background:${covColor}"></div></div>
+      <span class="cov-num">${covPct}</span>
+    </div>
+    <table style="margin-top:12px">
+      <thead><tr><th>模块</th><th>P0</th><th>P1</th><th>P2</th><th>功能点</th><th>有设计页</th><th>覆盖度</th></tr></thead>
+      <tbody>${matrixHtml}</tbody>
+    </table>
+    ${gapHtml}
+  `;
+}
+function render() { renderTabs(); renderFeatures(); renderCoverage(); }
+document.getElementById('searchBox').oninput = e => { searchQuery = e.target.value.toLowerCase(); renderFeatures(); };
+render();
+</script>
+</body>
+</html>
